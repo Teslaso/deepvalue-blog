@@ -2,6 +2,6 @@ baseURL = "https://deepvalue.space/"
 languageCode = "en-us"
 title = "DEEP VALUE"
 description = "mingxuan's blog"
-theme = "PaperMod"
+theme = "book"
 
  

@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Deep Value Space</title>
+    <title>你好，朋友 👋 on DEEP VALUE</title>
     <link>http://localhost:1313/</link>
-    <description>Recent content on Deep Value Space</description>
-    <generator>Hugo -- 0.147.8</generator>
+    <description>Recent content in 你好，朋友 👋 on DEEP VALUE</description>
+    <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate></lastBuildDate>
+    <lastBuildDate>Fri, 13 Jun 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>你好，世界</title>
+      <link>http://localhost:1313/posts/hello-world/</link>
+      <pubDate>Fri, 13 Jun 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/hello-world/</guid>
+      <description>&lt;p&gt;欢迎来到我的博客！&lt;/p&gt;&#xA;&lt;p&gt;这是我第一篇用 Hugo 写的博客文章。&lt;/p&gt;&#xA;&lt;p&gt;我是宋明璇&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>

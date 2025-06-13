@@ -1,6 +1,7 @@
 ---
 title: "你好，世界"
 date: 2025-06-13
+weight: 1
 draft: false
 ---
 

@@ -4,4 +4,5 @@ title = "DEEP VALUE"
 description = "mingxuan's blog"
 theme = "book"
 
- 
+[params]
+  BookSection = "posts"

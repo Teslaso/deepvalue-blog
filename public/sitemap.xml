@@ -2,23 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/docs/hello-world/</loc>
+    <loc>https://deepvalue.space/docs/hello-world/</loc>
     <lastmod>2025-06-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/</loc>
+    <loc>https://deepvalue.space/categories/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/tags/hugo/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/posts/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/tags/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/categories/%E6%8A%80%E6%9C%AF/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/posts/test-post/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/tags/%E6%B5%8B%E8%AF%95/</loc>
+    <lastmod>2025-09-19T18:27:22+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/posts/2025-08-05-deep-value-notes/</loc>
+    <lastmod>2025-08-05T14:41:33+08:00</lastmod>
+  </url><url>
+    <loc>https://deepvalue.space/posts/why-value-investing-works/</loc>
     <lastmod>2025-07-04T14:57:03+08:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/why-value-investing-works/</loc>
-    <lastmod>2025-07-04T14:57:03+08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2025-07-04T14:57:03+08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/docs/</loc>
+    <loc>https://deepvalue.space/docs/</loc>
     <lastmod>2025-06-13T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/categories/</loc>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
   </url>
 </urlset>

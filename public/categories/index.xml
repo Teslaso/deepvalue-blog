@@ -2,10 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on DEEP VALUE</title>
-    <link>http://localhost:1313/categories/</link>
+    <link>https://deepvalue.space/categories/</link>
     <description>Recent content in Categories on DEEP VALUE</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <atom:link href="http://localhost:1313/categories/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 19 Sep 2025 18:27:22 +0800</lastBuildDate>
+    <atom:link href="https://deepvalue.space/categories/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>技术</title>
+      <link>https://deepvalue.space/categories/%E6%8A%80%E6%9C%AF/</link>
+      <pubDate>Fri, 19 Sep 2025 18:27:22 +0800</pubDate>
+      <guid>https://deepvalue.space/categories/%E6%8A%80%E6%9C%AF/</guid>
+      <description></description>
+    </item>
   </channel>
 </rss>

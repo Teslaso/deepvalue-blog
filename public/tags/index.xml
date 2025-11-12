@@ -2,31 +2,45 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on DEEP VALUE</title>
-    <link>https://deepvalue.space/tags/</link>
+    <link>http://localhost:52377/tags/</link>
     <description>Recent content in Tags on DEEP VALUE</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 19 Sep 2025 18:27:22 +0800</lastBuildDate>
-    <atom:link href="https://deepvalue.space/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 12 Nov 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:52377/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>资本周期</title>
+      <link>http://localhost:52377/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/</link>
+      <pubDate>Wed, 12 Nov 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:52377/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>马拉松资本</title>
+      <link>http://localhost:52377/tags/%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B5%84%E6%9C%AC/</link>
+      <pubDate>Wed, 12 Nov 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:52377/tags/%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B5%84%E6%9C%AC/</guid>
+      <description></description>
+    </item>
     <item>
       <title>Hugo</title>
-      <link>https://deepvalue.space/tags/hugo/</link>
+      <link>http://localhost:52377/tags/hugo/</link>
       <pubDate>Fri, 19 Sep 2025 18:27:22 +0800</pubDate>
-      <guid>https://deepvalue.space/tags/hugo/</guid>
+      <guid>http://localhost:52377/tags/hugo/</guid>
       <description></description>
     </item>
     <item>
       <title>价值投资</title>
-      <link>https://deepvalue.space/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/</link>
+      <link>http://localhost:52377/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/</link>
       <pubDate>Fri, 19 Sep 2025 18:27:22 +0800</pubDate>
-      <guid>https://deepvalue.space/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/</guid>
+      <guid>http://localhost:52377/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/</guid>
       <description></description>
     </item>
     <item>
       <title>测试</title>
-      <link>https://deepvalue.space/tags/%E6%B5%8B%E8%AF%95/</link>
+      <link>http://localhost:52377/tags/%E6%B5%8B%E8%AF%95/</link>
       <pubDate>Fri, 19 Sep 2025 18:27:22 +0800</pubDate>
-      <guid>https://deepvalue.space/tags/%E6%B5%8B%E8%AF%95/</guid>
+      <guid>http://localhost:52377/tags/%E6%B5%8B%E8%AF%95/</guid>
       <description></description>
     </item>
   </channel>

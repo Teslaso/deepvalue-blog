@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en-us" dir="ltr">
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=52377&amp;path=livereload" data-no-instant defer></script>
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
-<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:52377/posts/">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/posts/">
   <meta property="og:site_name" content="DEEP VALUE">
   <meta property="og:title" content="Posts">
   <meta property="og:locale" content="en_us">
@@ -14,11 +14,11 @@
 <title>Posts | DEEP VALUE</title>
 <link rel="icon" href="/favicon.png" >
 <link rel="manifest" href="/manifest.json">
-<link rel="canonical" href="http://localhost:52377/posts/">
+<link rel="canonical" href="http://localhost:1313/posts/">
 <link rel="stylesheet" href="/book.min.b3d8fe8be9e02b729ac017148cfef768901958a61b06dfacc5c048b3c52050e5.css" integrity="sha256-s9j&#43;i&#43;ngK3KawBcUjP73aJAZWKYbBt&#43;sxcBIs8UgUOU=" crossorigin="anonymous">
   <script defer src="/fuse.min.js"></script>
-  <script defer src="/en.search.min.13818b7f4614a29d3f1db1167536c39febfa8220b05ae7de3e691437589cde2e.js" integrity="sha256-E4GLf0YUop0/HbEWdTbDn&#43;v6giCwWufePmkUN1ic3i4=" crossorigin="anonymous"></script>
-<link rel="alternate" type="application/rss+xml" href="http://localhost:52377/posts/index.xml" title="DEEP VALUE" />
+  <script defer src="/en.search.min.2de398415f2f78ae2fbc3ee4d3afbf7da3e308efb240274ecce4c0b910b0492d.js" integrity="sha256-LeOYQV8veK4vvD7k06&#43;/faPjCO&#43;yQCdOzOTAuRCwSS0=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/posts/index.xml" title="DEEP VALUE" />
 <!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
@@ -62,6 +62,32 @@ https://github.com/alex-shpak/hugo-book
 
   
   <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/posts/q-factor-model/" class="">q-factor model</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/posts/%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BBfactor-performance-2010-2019--a-lost-decade/" class="">Factor Performance 2010-2019 -A Lost Decade?</a>
+  
+
+        </li>
+      
     
       
         <li>
@@ -169,6 +195,16 @@ https://github.com/alex-shpak/hugo-book
       <ul>
       
         <li class="flex justify-between">
+          <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>
+          <span>2</span>
+        </li>
+      
+        <li class="flex justify-between">
+          <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
+          <span>2</span>
+        </li>
+      
+        <li class="flex justify-between">
           <a href="/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/">资本周期</a>
           <span>1</span>
         </li>
@@ -208,6 +244,187 @@ https://github.com/alex-shpak/hugo-book
 
       
       
+  
+  <article class="markdown book-post">
+    <h2>
+      <a href="/posts/q-factor-model/">q-factor model</a>
+    </h2>
+    
+  <div class="flex align-center text-small book-post-date">
+    <img src="/svg/calendar.svg" class="book-icon " alt="" />
+    <span>November 14, 2025</span>
+  </div>
+
+
+
+  
+
+  
+  <div class="text-small">
+    
+      <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>, 
+      <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
+  </div>
+  
+
+
+    <div class="book-post-content"><p>论文标题： Technical Document: Factors (因子构建技术文档)</p>
+<p>作者： Kewei Hou, Chen Xue, and Lu Zhang (及 Hou, Mo, Xue, and Zhang)</p>
+<p>核心领域： 因子投资、量化选股、基本面分析</p>
+<p><strong>第一步：核心概要与贡献识别</strong></p>
+<ul>
+<li>
+<p>一句话电梯演讲 (Elevator Pitch):</p>
+<p>这篇文档揭示了如何将公司金融的第一性原理（投资和盈利能力）转化为可交易的投资因子，其解释力在很大程度上超越了Fama-French模型，并且它还引入了一个基于“预期”而非“历史”的前瞻性增长因子。</p>
+</li>
+<li>
+<p><strong>这篇论文的核心贡献领域：</strong></p>
+<ul>
+<li>
+<p><strong>[贡献一：q-因子的构建：基于经济理论的因子定义]</strong></p>
+</li>
+<li>
+<p><strong>[贡献二：“预期增长”因子的构建：一个前瞻性的新指标]</strong></p>
+</li>
+<li>
+<p><strong>[贡献三：数据的“时效性”：在因子构建中的精细处理]</strong></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>第二步：分领域深度剖析与应用</strong></p>
+<hr>
+<p><strong>模块一：[q-因子的构建：基于经济理论的因子定义]</strong></p>
+<ul>
+<li>
+<ol>
+<li>这个核心洞见是什么？ (What is the core insight?)</li>
+</ol>
+<p>q-因子模型（HXZ 2015）的核心是两个基于基本面的因子：投资（Investment）和盈利能力（Profitability）。</p>
+<ol>
+<li>
+<p><strong>投资因子 ($R_{I/A}$):</strong></p>
+<ul>
+<li>
+<p><strong>定义：</strong> 投资-资产比（I/A），即总资产的年度变化 / 滞后一年的总资产。</p>
+</li>
+<li>
+<p><strong>构建：</strong> （低 I/A 投资组合的平均回报）-（高 I/A 投资组合的平均回报）。</p>
+</li>
+<li>
+<p><strong>洞见：</strong> 这意味着，在其他条件相同的情况下，<strong>投资较少（即资产扩张较慢）的公司，其未来股票回报率更高</strong>。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>盈利能力因子 ($R_{Roe}$):</strong></p>
+<ul>
+<li>
+<p><strong>定义：</strong> 净资产收益率（Roe），即季度税前非凡利润（IBQ） / 滞后一季度的账面权益。</p>
+</li>
+<li>
+<p><strong>构建：</strong> （高 Roe 投资组合的平均回报）-（低 Roe 投资组合的平均回报）。</p>
+</li>
+<li>
+<p><strong>洞见：</strong> 这意味着，<strong>盈利能力更强的公司，其未来股票回报率更高</strong>。</p>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>为什么这个洞见至关重要？ (Why does it matter?)</li>
+</ol>
+<p>这为“价值”和“质量”投资提供了坚实的经济学理论基础（q-理论）。</p></div>
+  </article>
+  
+  <article class="markdown book-post">
+    <h2>
+      <a href="/posts/%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BBfactor-performance-2010-2019--a-lost-decade/">Factor Performance 2010-2019 -A Lost Decade?</a>
+    </h2>
+    
+  <div class="flex align-center text-small book-post-date">
+    <img src="/svg/calendar.svg" class="book-icon " alt="" />
+    <span>November 12, 2025</span>
+  </div>
+
+
+
+  
+
+  
+  <div class="text-small">
+    
+      <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>, 
+      <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
+  </div>
+  
+
+
+    <div class="book-post-content"><p>论文标题： Factor Performance 2010-2019: A Lost Decade? (因子表现2010-2019：失落的十年？)</p>
+<p>核心领域： 因子投资 (Factor Investing) / 定量分析 (Quantitative Analysis)</p>
+<p><strong>第一步：核心概要与贡献识别</strong></p>
+<ul>
+<li>
+<p><strong>论文标题与作者：</strong></p>
+<ul>
+<li>
+<p>标题：Factor Performance 2010-2019: A Lost Decade?</p>
+</li>
+<li>
+<p>作者：DAVID BLITZ</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>一句话电梯演讲 (Elevator Pitch):</strong></p>
+<ul>
+<li>“这篇论文证明了，虽然学术界最推崇的法玛-弗兰奇 (Fama-French) 因子在2010年代彻底失效，但一个更多元化的‘因子动物园’——尤其是低风险和动量因子——却表现出色，这说明我们依赖的经典模型存在危险的缺陷。”</li>
+</ul>
+</li>
+<li>
+<p><strong>这篇论文的核心贡献领域：</strong></p>
+<ul>
+<li>
+<p><strong>[贡献一：识别了“失落的十年”及其历史相似性]</strong></p>
+</li>
+<li>
+<p><strong>[贡献二：揭示了因子表现的“巨大分化”]</strong></p>
+</li>
+<li>
+<p><strong>[贡献三：发现了因子与市场回报的“负相关”关系]</strong></p>
+</li>
+<li>
+<p><strong>[贡献四：挑战了“因子简约主义”的学术追求]</strong></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>第二步：分领域深度剖析与应用</strong></p>
+<hr>
+<p><strong>模块一：[贡献一：识别了“失落的十年”及其历史相似性]</strong></p>
+<ul>
+<li>
+<p><strong>1. 这个核心洞见是什么？ (What is the core insight?)</strong></p>
+<ul>
+<li>
+<p>学术界广泛使用的法玛-弗兰奇五因子模型，在2010-2019这十年间整体失效了 。</p>
+</li>
+<li>
+<p>具体来说，规模 (SMB) 和价值 (HML) 因子经历了负回报 55，投资 (CMA) 因子回报接近于零 66，只有盈利 (RMW) 因子提供了正回报，但其溢价也仅为2010年以前水平的一半左右 7。</p>
+</li>
+<li>
+<p>将市场因子排除后，这四个因子的平均溢价在2010-2019年间为-0.28% 。</p>
+</li>
+<li>
+<p>然而，这并非史无前例。论文指出，2010年代的情况与1990-1999年代“惊人地相似” (remarkably similar) 。在1990年代，规模和价值因子同样为负，投资因子接近于零，导致因子组合的整体回报也为负。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>2. 为什么这个洞见至关重要？ (Why does it matter?)</strong></p></div>
+  </article>
   
   <article class="markdown book-post">
     <h2>
@@ -458,6 +675,16 @@ https://github.com/alex-shpak/hugo-book
     <li class="book-section-flat">
       <span>Tags</span>
       <ul>
+      
+        <li class="flex justify-between">
+          <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>
+          <span>2</span>
+        </li>
+      
+        <li class="flex justify-between">
+          <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
+          <span>2</span>
+        </li>
       
         <li class="flex justify-between">
           <a href="/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/">资本周期</a>

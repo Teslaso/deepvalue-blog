@@ -1,5 +1,5 @@
 ---
-title: 论文解读Factor Performance 2010-2019 -A Lost Decade?
+title: Factor Performance 2010-2019 -A Lost Decade?
 date: 2025-11-12
 tags:
   - 因子投资

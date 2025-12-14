@@ -1,0 +1,198 @@
+{
+  "main": {
+    "id": "fed49486c73066bb",
+    "type": "split",
+    "children": [
+      {
+        "id": "ca7e2d4f4bb93d28",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4a1d7b1cdc5869e5",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "content/posts/test-post.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "test-post"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e555a00cf241f3e9",
+    "type": "split",
+    "children": [
+      {
+        "id": "c2540c18cd19b0f9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "385dc1b449b628b3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "9a305790e3053536",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "09c91fa52f664071",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "a2e9f2ff6d5105e5",
+    "type": "split",
+    "children": [
+      {
+        "id": "42ddaaa5d196a58e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bd55da08d1a486b2",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "content/posts/图片测试.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "图片测试 的反向链接列表"
+            }
+          },
+          {
+            "id": "09544908597c356a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "content/posts/图片测试.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "图片测试 的出链列表"
+            }
+          },
+          {
+            "id": "724ed4bad304cbc8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "7cea4279f05451de",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "ddf70e23057adc55",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "content/posts/图片测试.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "图片测试 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:创建新数据库": false
+    }
+  },
+  "active": "4a1d7b1cdc5869e5",
+  "lastOpenFiles": [
+    "content/_index.md",
+    "content/posts/图片测试.md",
+    "content/posts/assets/Pasted image 20251214145356.png",
+    "content/posts/assets/Pasted image 20251214143400.png",
+    "content/posts/Pasted image 20251214143400.png",
+    "Pasted image 20251214143117.png",
+    "content/posts/马拉松全球投资评论第38卷.md",
+    "content/posts/论文解读Factor Performance 2010-2019 -A Lost Decade.md",
+    "content/posts/q-factor解密：为什么像CEO一样思考，才能真正理解股票市场.md"
+  ]
+}

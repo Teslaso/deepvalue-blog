@@ -59,7 +59,7 @@ while IFS= read -r line; do
   IMG="${line#*[[}"
   IMG="${IMG%%]]*}"
   if [ -n "$IMG" ]; then IMAGES_TO_COPY+=("$IMG"); fi
-done < <(grep -oE '!\[\[(.*?)\]\]' "$TMP_PROCESSED" || true)
+done < <(grep -oE '!\[\[([^]]+)\]\]' "$TMP_PROCESSED" || true)
 
 while IFS= read -r line; do
   PATH_IN="${line#*](}"
@@ -71,13 +71,21 @@ while IFS= read -r line; do
 done < <(grep -oE '!\[[^]]*\]\([^)]*\)' "$TMP_PROCESSED" || true)
 
 UNIQ_IMAGES=$(printf "%s\n" "${IMAGES_TO_COPY[@]}" | awk 'NF' | sort -u)
-for f in $UNIQ_IMAGES; do
+printf "%s\n" "${IMAGES_TO_COPY[@]}" | awk 'NF' | sort -u | while IFS= read -r f; do
   SRC_CANDIDATES=("$SRC_DIR/$f")
+  SRC_CANDIDATES+=("$SRC_DIR/assets/$f")
+  SRC_CANDIDATES+=("$SRC_DIR/attachments/$f")
+  # 检查 Obsidian 默认的 attachments 文件夹 (如果是相对根目录)
+  SRC_CANDIDATES+=("$ROOT_DIR/assets/$f")
+  SRC_CANDIDATES+=("$ROOT_DIR/attachments/$f")
+
   if [ -n "$ASSETS_DIR" ]; then SRC_CANDIDATES+=("$ASSETS_DIR/$f"); fi
   COPIED=false
   for cand in "${SRC_CANDIDATES[@]}"; do
     if [ -f "$cand" ]; then
-      cp "$cand" "$OUT_IMG_DIR/$f"
+      # Auto-sanitize filename: replace spaces with hyphens
+      f_clean="${f// /-}"
+      cp "$cand" "$OUT_IMG_DIR/$f_clean"
       COPIED=true
       break
     fi
@@ -87,8 +95,8 @@ for f in $UNIQ_IMAGES; do
   fi
 done
 
-perl -0777 -pe "s/!\[\[(.*?)\]\]/![]\(\/images\/$SLUG\/\1\)/g" "$TMP_PROCESSED" > "$TMP_PROCESSED.conv1"
-perl -0777 -pe "s/!\[[^\]]*\]\((?!https?:|\/images\/)([^\)]+)\)/sprintf('![]\(\/images\/%s\/%s\)', '$SLUG', (split('\/', \$1))[-1])/ge" "$TMP_PROCESSED.conv1" > "$TMP_PROCESSED.conv2"
+perl -0777 -pe "s/!\[\[(.*?)\]\]/ my \$f=\$1; \$f=~s! !-!g; \"![](\/images\/$SLUG\/\$f)\" /ge" "$TMP_PROCESSED" > "$TMP_PROCESSED.conv1"
+perl -0777 -pe "s/!\[[^\]]*\]\((?!https?:|\/images\/)([^\)]+)\)/ my \$f=(split('\/', \$1))[-1]; \$f=~s! !-!g; sprintf('![](\/images\/%s\/%s)', '$SLUG', \$f) /ge" "$TMP_PROCESSED.conv1" > "$TMP_PROCESSED.conv2"
 
 TITLE_LINE="$(awk '/^# /{sub(/^# /, ""); print; exit}' "$TMP_PROCESSED.conv2")"
 TITLE_VAL="${TITLE_LINE:-$NAME_NO_EXT}"

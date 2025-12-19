@@ -6,3 +6,15 @@ theme = "book"
 
 [params]
   BookSection = "posts"
+
+# 分类配置
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+# 搜索配置
+[params]
+  BookSection = "posts"
+  BookSearch = true  # 启用搜索功能
+  BookDateFormat = "2006-01-02"  # 日期格式
+  BookSearchConfig = '{"threshold": 0.2, "distance": 100, "includeScore": true, "keys": ["title", "content", "tags", "categories"]}'

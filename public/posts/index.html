@@ -1,542 +1,162 @@
 <!DOCTYPE html>
-<html lang="en-us" dir="ltr">
+<html lang="en-us" class="scroll-smooth">
 <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
-  <!--
-Made with Book Theme
-https://github.com/alex-shpak/hugo-book
--->
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
-<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/posts/">
-  <meta property="og:site_name" content="DEEP VALUE">
-  <meta property="og:title" content="Posts">
-  <meta property="og:locale" content="en_us">
-  <meta property="og:type" content="website">
-
-
-  <meta itemprop="name" content="Posts">
-  <meta itemprop="datePublished" content="2025-11-14T00:00:00+00:00">
-  <meta itemprop="dateModified" content="2025-11-14T00:00:00+00:00">
-
-<title>Posts | DEEP VALUE</title>
-<link rel="icon" href="/favicon.png" >
-<link rel="manifest" href="/manifest.json">
-<link rel="canonical" href="http://localhost:1313/posts/">
-<link rel="stylesheet" href="/book.min.cc2c524ed250aac81b23d1f4af87344917b325208841feca0968fe450f570575.css" integrity="sha256-zCxSTtJQqsgbI9H0r4c0SRezJSCIQf7KCWj&#43;RQ9XBXU=" crossorigin="anonymous">
-
-
-  <script defer src="/fuse.min.js"></script>
-  <script defer src="/en.search.min.394486283f35d7fd595ed398a886253e00389cab55649ee2e73abd3fa6a13b1d.js" integrity="sha256-OUSGKD811/1ZXtOYqIYlPgA4nKtVZJ7i5zq9P6ahOx0=" crossorigin="anonymous"></script>
-
-
-<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/posts/index.xml" title="DEEP VALUE" />
-
-  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts | DEEP VALUE</title>
+    
+    
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Playfair Display"', 'serif'],
+              sans: ['"Inter"', 'sans-serif'],
+            },
+            colors: {
+              nobel: {
+                gold: '#C5A059',
+                dark: '#1a1a1a',
+                cream: '#F9F8F4',
+              },
+              stone: {
+                50: '#fafaf9',
+                100: '#f5f5f4',
+                200: '#e7e5e4',
+                300: '#d6d3d1',
+                400: '#a8a29e',
+                500: '#78716c',
+                600: '#57534e',
+                700: '#44403c',
+                800: '#292524',
+                900: '#1c1917',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      body {
+        background-color: #F9F8F4;
+        color: #1c1917;
+      }
+       
+      ::selection {
+        background-color: #C5A059;
+        color: white;
+      }
+    </style>
 </head>
-<body dir="ltr" class="book-kind-section book-type-posts">
-  <input type="checkbox" class="hidden toggle" id="menu-control" />
-  <input type="checkbox" class="hidden toggle" id="toc-control" />
-  <main class="container flex">
+<body class="min-h-screen bg-[#F9F8F4] text-stone-800 font-sans flex flex-col">
     
-<aside class="book-menu">
-  <div class="book-menu-content">
     
-  <nav>
-<h2 class="book-brand">
-  <a class="flex align-center" href="/"><span>DEEP VALUE</span>
-  </a>
-</h2>
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-[#F9F8F4]/90 backdrop-blur-md shadow-sm transition-all duration-300 py-4">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="/" class="flex items-center gap-4 cursor-pointer group">
+                <div class="w-8 h-8 bg-nobel-gold rounded-full flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm pb-1 group-hover:bg-stone-900 transition-colors">α</div>
+                <span class="font-serif font-bold text-lg tracking-wide transition-opacity uppercase">
+                    DEEP VALUE
+                </span>
+            </a>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide text-stone-600">
+                <a href="/" class="hover:text-nobel-gold transition-colors cursor-pointer uppercase">首页</a>
+                
+                <a href="/about/" class="hover:text-nobel-gold transition-colors cursor-pointer uppercase">About Me</a>
+                
+                
+                
+            </div>
+        </div>
+    </nav>
 
-
-<div class="book-search hidden">
-  <input id="book-search-input" type="text" 
-    placeholder="Search"
-    aria-label="Search"
-    maxlength="64" data-hotkeys="s/" />
-  <div class="book-search-spinner hidden"></div>
-  <ul id="book-search-results"></ul>
-</div>
-<script>document.querySelector(".book-search").classList.remove("hidden")</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  <ul>
     
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/q-factor%E8%A7%A3%E5%AF%86%E4%B8%BA%E4%BB%80%E4%B9%88%E5%83%8Fceo%E4%B8%80%E6%A0%B7%E6%80%9D%E8%80%83%E6%89%8D%E8%83%BD%E7%9C%9F%E6%AD%A3%E7%90%86%E8%A7%A3%E8%82%A1%E7%A5%A8%E5%B8%82%E5%9C%BA/" class="">
-      Q Factor解密：为什么像 Ceo一样思考，才能真正理解股票市场</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/q-factor-model/" class="">
-      q-factor model</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BBfactor-performance-2010-2019--a-lost-decade/" class="">
-      Factor Performance 2010-2019 -A Lost Decade?</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/%E9%A9%AC%E6%8B%89%E6%9D%BE%E5%85%A8%E7%90%83%E6%8A%95%E8%B5%84%E8%AF%84%E8%AE%BA%E7%AC%AC38%E5%8D%B7/" class="">
-      铜矿资本周期分析-马拉松资本</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/%E5%8C%96%E5%B7%A5%E8%A1%8C%E4%B8%9A%E5%9B%9E%E9%A1%BE%E5%9C%A8%E7%BB%9D%E6%9C%9B%E4%B8%AD%E5%AF%BB%E6%89%BE%E4%B8%8D%E5%AF%B9%E7%A7%B0%E6%80%A7/" class="">
-      化工行业回顾：在绝望中寻找不对称性</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/posts/%E5%9C%B0%E4%BA%A7%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%AD%BB%E6%B3%95%E5%BD%93%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%AD%E5%9B%BD%E6%A5%BC%E5%B8%82%E6%97%B6%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%9C%E4%BA%AC%E8%BF%98%E6%98%AF%E6%8B%89%E6%96%AF%E7%BB%B4%E5%8A%A0%E6%96%AF/" class="">
-      地产的两种死法：当我们在谈论中国楼市时，我们在谈论东京还是拉斯维加斯？</a>
-  
-
-        </li>
-      
-    
-  </ul>
-
-
-
-
-
-
-
-
-
-
-
-
-
-</nav>
-
-
-
-
-  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
-
-
-
-  </div>
-</aside>
- 
-
-    <div class="book-page">
-      <header class="book-header hidden">
+    <main class="flex-grow pt-24">
         
-  <div class="flex align-center justify-between">
-  <label for="menu-control">
-    <img src="/icons/menu.svg" class="book-icon" alt="Menu" />
-  </label>
-
-  <h3>Posts</h3>
-
-  <label for="toc-control">
-    
-  </label>
-</div>
-
-
-  
- 
-      </header>
-
-      
-      
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/q-factor%E8%A7%A3%E5%AF%86%E4%B8%BA%E4%BB%80%E4%B9%88%E5%83%8Fceo%E4%B8%80%E6%A0%B7%E6%80%9D%E8%80%83%E6%89%8D%E8%83%BD%E7%9C%9F%E6%AD%A3%E7%90%86%E8%A7%A3%E8%82%A1%E7%A5%A8%E5%B8%82%E5%9C%BA/">Q Factor解密：为什么像 Ceo一样思考，才能真正理解股票市场</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
+<section class="py-16 bg-white min-h-[60vh]">
+    <div class="container mx-auto px-6 max-w-4xl">
         
-  <div class="flex align-center text-small book-post-date">
-    <img src="/icons/calendar.svg" class="book-icon" alt="Calendar" />
-    <span>November 14, 2025</span>
-  </div>
+        <header class="mb-16 text-center">
+            <div class="inline-block mb-3 text-xs font-bold tracking-widest text-stone-500 uppercase">ARCHIVE</div>
+            <h1 class="font-serif text-4xl md:text-5xl text-stone-900 mb-6">Posts</h1>
+            <div class="w-16 h-1 bg-nobel-gold mx-auto"></div>
+        </header>
 
-
-
-  
-
-  
-  <div class="text-small">
-    
-      <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>
-  </div>
-  
-
-
-        <div class="book-post-content markdown-inner"><h2 id="第一部分市场的困惑异象动物园与传统模型的失灵">第一部分：市场的困惑——“异象动物园”与传统模型的失灵<a class="anchor" href="#%e7%ac%ac%e4%b8%80%e9%83%a8%e5%88%86%e5%b8%82%e5%9c%ba%e7%9a%84%e5%9b%b0%e6%83%91%e5%bc%82%e8%b1%a1%e5%8a%a8%e7%89%a9%e5%9b%ad%e4%b8%8e%e4%bc%a0%e7%bb%9f%e6%a8%a1%e5%9e%8b%e7%9a%84%e5%a4%b1%e7%81%b5">#</a></h2>
-<h3 id="11-投资者的困惑为什么市场如此不合理">1.1 投资者的困惑：为什么市场如此“不合理”？<a class="anchor" href="#11-%e6%8a%95%e8%b5%84%e8%80%85%e7%9a%84%e5%9b%b0%e6%83%91%e4%b8%ba%e4%bb%80%e4%b9%88%e5%b8%82%e5%9c%ba%e5%a6%82%e6%ad%a4%e4%b8%8d%e5%90%88%e7%90%86">#</a></h3>
-<p>在投资领域，一个长久以来的困惑是：为什么那些被媒体追捧、大举投资扩张的“明星公司”，其长期股票回报往往令人失望？相反，一些增长缓慢、甚至在缩减规模的“无聊”公司，反而在未来能为投资者提供惊人的超额收益？</p>
-<p>这种现象并非个例。金融学术界将这些传统金融理论无法解释、但又似乎能系统性预测未来回报的模式，称为“市场异象”（Anomalies）。这些异象的存在，让投资者和学者都感到困惑：市场到底是不是理性的 …</p></div>
-      </div></div>
-  </article>
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/q-factor-model/">q-factor model</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
-        
-  <div class="flex align-center text-small book-post-date">
-    <img src="/icons/calendar.svg" class="book-icon" alt="Calendar" />
-    <span>November 14, 2025</span>
-  </div>
-
-
-
-  
-
-  
-  <div class="text-small">
-    
-      <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>, 
-      <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
-  </div>
-  
-
-
-        <div class="book-post-content markdown-inner"><p>论文标题： Technical Document: Factors (因子构建技术文档)</p>
-<p>作者： Kewei Hou, Chen Xue, and Lu Zhang (及 Hou, Mo, Xue, and Zhang)</p>
-<p>核心领域： 因子投资、量化选股、基本面分析</p>
-<p><strong>第一步：核心概要与贡献识别</strong></p>
-<ul>
-<li>
-<p>一句话电梯演讲 (Elevator Pitch):</p>
-<p>这篇文档揭示了如何将公司金融的第一性原理（投资和盈利能力）转化为可交易的投资因子，其解释力在很大程度上超越了Fama-French模型，并且它还引入了一个基于“预 …</p></li></ul></div>
-      </div></div>
-  </article>
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/%E8%AE%BA%E6%96%87%E8%A7%A3%E8%AF%BBfactor-performance-2010-2019--a-lost-decade/">Factor Performance 2010-2019 -A Lost Decade?</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
-        
-  <div class="flex align-center text-small book-post-date">
-    <img src="/icons/calendar.svg" class="book-icon" alt="Calendar" />
-    <span>November 12, 2025</span>
-  </div>
-
-
-
-  
-
-  
-  <div class="text-small">
-    
-      <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>, 
-      <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
-  </div>
-  
-
-
-        <div class="book-post-content markdown-inner"><p>论文标题： Factor Performance 2010-2019: A Lost Decade? (因子表现2010-2019：失落的十年？)</p>
-<p>核心领域： 因子投资 (Factor Investing) / 定量分析 (Quantitative Analysis)</p>
-<p><strong>第一步：核心概要与贡献识别</strong></p>
-<ul>
-<li>
-<p><strong>论文标题与作者：</strong></p>
-<ul>
-<li>
-<p>标题：Factor Performance 2010-2019: A Lost Decade?</p>
-</li>
-<li>
-<p>作者：DAVID BLITZ</p>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>一句话电梯演讲 (Elevator Pitch): …</strong></p></li></li></ul></li></ul></div>
-      </div></div>
-  </article>
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/%E9%A9%AC%E6%8B%89%E6%9D%BE%E5%85%A8%E7%90%83%E6%8A%95%E8%B5%84%E8%AF%84%E8%AE%BA%E7%AC%AC38%E5%8D%B7/">铜矿资本周期分析-马拉松资本</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
-        
-  <div class="flex align-center text-small book-post-date">
-    <img src="/icons/calendar.svg" class="book-icon" alt="Calendar" />
-    <span>November 12, 2025</span>
-  </div>
-
-
-
-  
-  <div class="text-small">
-    
-      <a href="/categories/%E6%91%98%E5%BD%95/">摘录</a>
-  </div>
-  
-
-  
-  <div class="text-small">
-    
-      <a href="/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/">资本周期</a>, 
-      <a href="/tags/%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B5%84%E6%9C%AC/">马拉松资本</a>
-  </div>
-  
-
-
-        <div class="book-post-content markdown-inner"><p><strong>马拉松全球投资评论 第38卷 第3号 2024年5月31日</strong></p>
-<p><strong>铜“点石成金”</strong></p>
-<p>“有（些）时候，几十年（才发生）的事情会（在）几周内发生。”</p>
-<p>弗拉基米尔·列宁</p>
-<p>我们的老读者可能还记得我们在2021年12月那篇题为《回归本源》的文章。当时我们指出，由于全球金融危机（GFC）后长达十年的投资不足，铜行业即将面临供应紧缩。</p>
-<p>自那以后，尽管整个资本周期的大趋势和该行业面临的根本挑战几乎没有改变，但近几周来，股票市场对铜矿公司的估值却发生了翻天覆地的变化。</p>
-<p>铜资产的吸引力早已被产业买家看在眼里。继 …</p></div>
-      </div></div>
-  </article>
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/%E5%8C%96%E5%B7%A5%E8%A1%8C%E4%B8%9A%E5%9B%9E%E9%A1%BE%E5%9C%A8%E7%BB%9D%E6%9C%9B%E4%B8%AD%E5%AF%BB%E6%89%BE%E4%B8%8D%E5%AF%B9%E7%A7%B0%E6%80%A7/">化工行业回顾：在绝望中寻找不对称性</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
-        
-
-
-  
-
-  
-
-
-        <div class="book-post-content markdown-inner"><p>2024年的投资圈有两种截然不同的空气。</p>
-<p>一种是在加州和台北，空气里弥漫着昂贵的GPU散热味，每一次算力的迭代都伴随着市盈率的狂欢；另一种是在德国路德维希港（巴斯夫总部所在地）和欧洲的老工业区，那里寒风刺骨，空气里全是滞销的乙烯和绝望的情绪。</p>
-<p>如果你只看K线图，欧洲化工板块简直就是一场灾难。自俄乌冲突以来，能源危机、去库存、环保政策的三重打击，让这个曾经引以为傲的行业看起来像是要被时代抛弃了。</p>
-<p>但就在这种几乎没人想看第二眼的时候，来自伦敦的 Hosking Partners发出了一份非常有意思的报告。他们认 …</p></div>
-      </div></div>
-  </article>
-  
-  <article class="book-post markdown">
-    <h2>
-      <a href="/posts/%E5%9C%B0%E4%BA%A7%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%AD%BB%E6%B3%95%E5%BD%93%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%AD%E5%9B%BD%E6%A5%BC%E5%B8%82%E6%97%B6%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%9C%E4%BA%AC%E8%BF%98%E6%98%AF%E6%8B%89%E6%96%AF%E7%BB%B4%E5%8A%A0%E6%96%AF/">地产的两种死法：当我们在谈论中国楼市时，我们在谈论东京还是拉斯维加斯？</a>
-    </h2>
-    <div class="book-post-container flex gap">
-      <div>
-        
-
-
-  
-
-  
-
-
-        <div class="book-post-content markdown-inner"><p><strong>01</strong></p>
+        <div class="space-y-12">
+            
+            <article class="group flex flex-col md:flex-row gap-6 md:items-baseline border-b border-stone-100 pb-12 last:border-0">
+                <div class="md:w-32 flex-shrink-0 text-sm font-bold text-stone-400 uppercase tracking-wider">
+                    Jan 2, 2024
+                </div>
+                <div>
+                    <a href="/posts/%E5%9C%B0%E4%BA%A7%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%AD%BB%E6%B3%95%E5%BD%93%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%AD%E5%9B%BD%E6%A5%BC%E5%B8%82%E6%97%B6%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%9C%E4%BA%AC%E8%BF%98%E6%98%AF%E6%8B%89%E6%96%AF%E7%BB%B4%E5%8A%A0%E6%96%AF/">
+                        <h2 class="font-serif text-2xl md:text-3xl text-stone-900 mb-3 group-hover:text-nobel-gold transition-colors leading-tight">
+                            地产的两种死法：当我们在谈论中国楼市时，我们在谈论东京还是拉斯维加斯？
+                        </h2>
+                    </a>
+                    <p class="text-stone-600 leading-relaxed mb-4 font-light">
+                        <p><strong>01</strong></p>
 <p>在投资圈，有一种悲观是“情绪上的悲观”，还有一种悲观是“数学上的乐观”。</p>
 <p>听起来很矛盾？让我们把时钟拨回到2025年的当下。中国房地产行业的调整已经进入了第五个年头。从“三道红线”开始，到恒大违约，再到随后漫长的去库存，每一个身处其中的人都感到寒意。</p>
-<p>但在大洋彼岸，一家以“反向投资”和“资本周期”著称的老牌机构——马拉松资产管理公司，却在8月底的一份报告中，引用了《孙子兵法》的一句话：</p>
-<blockquote class='book-hint '>
-<p>“乱生于治，怯生于勇，弱生于强。”（In the midst of chaos, there is also …</p></blockquote></div>
-      </div></div>
-  </article>
-  
- 
-      
-
-      <footer class="book-footer">
+<p>但在大洋彼岸，一家以“反向投资”和“资本周期”著称的老牌机构——马拉松资产管理公司，却在8月底的一份报 …</p>
+                    </p>
+                    <a href="/posts/%E5%9C%B0%E4%BA%A7%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%AD%BB%E6%B3%95%E5%BD%93%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%AD%E5%9B%BD%E6%A5%BC%E5%B8%82%E6%97%B6%E6%88%91%E4%BB%AC%E5%9C%A8%E8%B0%88%E8%AE%BA%E4%B8%9C%E4%BA%AC%E8%BF%98%E6%98%AF%E6%8B%89%E6%96%AF%E7%BB%B4%E5%8A%A0%E6%96%AF/" class="text-xs font-bold text-nobel-gold uppercase tracking-widest hover:text-stone-900 transition-colors">Read More</a>
+                </div>
+            </article>
+            
+            <article class="group flex flex-col md:flex-row gap-6 md:items-baseline border-b border-stone-100 pb-12 last:border-0">
+                <div class="md:w-32 flex-shrink-0 text-sm font-bold text-stone-400 uppercase tracking-wider">
+                    Jan 1, 2024
+                </div>
+                <div>
+                    <a href="/posts/%E5%8C%96%E5%B7%A5%E8%A1%8C%E4%B8%9A%E5%9B%9E%E9%A1%BE%E5%9C%A8%E7%BB%9D%E6%9C%9B%E4%B8%AD%E5%AF%BB%E6%89%BE%E4%B8%8D%E5%AF%B9%E7%A7%B0%E6%80%A7/">
+                        <h2 class="font-serif text-2xl md:text-3xl text-stone-900 mb-3 group-hover:text-nobel-gold transition-colors leading-tight">
+                            化工行业回顾：在绝望中寻找不对称性
+                        </h2>
+                    </a>
+                    <p class="text-stone-600 leading-relaxed mb-4 font-light">
+                        <p>2024年的投资圈有两种截然不同的空气。</p>
+<p>一种是在加州和台北，空气里弥漫着昂贵的GPU散热味，每一次算力的迭代都伴随着市盈率的狂欢；另一种是在德国路德维希港（巴斯夫总部所在地）和欧洲的老工业区，那里寒风刺骨，空气里全是滞销的乙烯和绝望的情绪。</p>
+<p>如果你只看K线图，欧洲化工板块简直就是一场灾难。自俄乌冲突以来，能源危机、去库存、环保政策的三重打击，让这个曾经引以 …</p>
+                    </p>
+                    <a href="/posts/%E5%8C%96%E5%B7%A5%E8%A1%8C%E4%B8%9A%E5%9B%9E%E9%A1%BE%E5%9C%A8%E7%BB%9D%E6%9C%9B%E4%B8%AD%E5%AF%BB%E6%89%BE%E4%B8%8D%E5%AF%B9%E7%A7%B0%E6%80%A7/" class="text-xs font-bold text-nobel-gold uppercase tracking-widest hover:text-stone-900 transition-colors">Read More</a>
+                </div>
+            </article>
+            
+        </div>
         
-  <div class="flex flex-wrap justify-between">
-  <span>
-  </span>
-  
-  <span>
-  </span>
-</div>
- 
         
-  
- 
-        
-        
-  
- 
-        
-  
-  
-    <script>(function(){document.querySelectorAll("pre:has(code)").forEach(e=>{e.addEventListener("click",e.focus),e.addEventListener("copy",function(t){if(t.preventDefault(),navigator.clipboard){const t=window.getSelection().toString()||e.textContent;navigator.clipboard.writeText(t)}})})})()</script>
-  
-
-      </footer>
-
-      <label for="menu-control" class="hidden book-menu-overlay"></label>
+        <div class="mt-16 flex justify-center gap-4">
+            
+            
+        </div>
     </div>
+</section>
+
+    </main>
 
     
-<aside class="book-toc">
-  <div class="book-toc-content">
-    
-  <nav>
-  <ul>
-  
-    
-    <li class="book-section-flat">
-      <a>Categories</a>
-      <ul>
-      
-        <li class="flex align-center">
-          <a href="/categories/%E6%91%98%E5%BD%95/">摘录</a>
-          <span>1</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
-          <span>0</span>
-        </li>
-      
-      </ul>
-    </li>
-    
-  
-    
-    <li class="book-section-flat">
-      <a>Tags</a>
-      <ul>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E5%9B%A0%E5%AD%90%E6%8A%95%E8%B5%84/">因子投资</a>
-          <span>3</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E8%AE%BA%E6%96%87ai%E8%A7%A3%E8%AF%BB/">论文AI解读</a>
-          <span>2</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E8%B5%84%E6%9C%AC%E5%91%A8%E6%9C%9F/">资本周期</a>
-          <span>1</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B5%84%E6%9C%AC/">马拉松资本</a>
-          <span>1</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/hugo/">Hugo</a>
-          <span>0</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E4%BB%B7%E5%80%BC%E6%8A%95%E8%B5%84/">价值投资</a>
-          <span>0</span>
-        </li>
-      
-        <li class="flex align-center">
-          <a href="/tags/%E6%B5%8B%E8%AF%95/">测试</a>
-          <span>0</span>
-        </li>
-      
-      </ul>
-    </li>
-    
-  
-  </ul>
-</nav>
-
-
-  </div>
-</aside>
- 
-  </main>
-
-  
+    <footer class="bg-stone-900 text-stone-400 py-16 mt-24">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-center md:text-left">
+                <div class="text-white font-serif font-bold text-2xl mb-2">DEEP VALUE</div>
+                <p class="text-sm text-stone-500">Deep Value & Asymmetry in Markets</p>
+            </div>
+            <div class="text-xs text-stone-600">
+                &copy; 2025 DEEP VALUE. Powered by Hugo & Research Style.
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

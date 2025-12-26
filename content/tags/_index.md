@@ -4,4 +4,9 @@ title: "标签"
 
 # 所有标签
 
-{{</* tags */>}}
+{{ range $name, $items := .Site.Taxonomies.tags }}
+<div class="taxonomy-item">
+  <a href="{{ relURL (printf "/tags/%s" ($name | urlize)) }}">{{ $name }}</a>
+  <span class="count">({{ len $items }})</span>
+</div>
+{{ end }}

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(hugo server:*)",
       "Bash(chmod:*)",
-      "Bash(./test-taxonomies.sh:*)"
+      "Bash(./test-taxonomies.sh:*)",
+      "Bash(where:*)"
     ]
   }
 }

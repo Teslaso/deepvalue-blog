@@ -14,7 +14,7 @@ while (("$#")); do
   case "$1" in
     --assets-dir)
       ASSETS_DIR="$2"; shift 2;;
-    --slug)
+    --slug)gemini
       SLUG="$2"; shift 2;;
     --date)
       DATE_OVERRIDE="$2"; shift 2;;

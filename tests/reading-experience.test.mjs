@@ -19,6 +19,19 @@ test('homepage proceeds from the hero to the article list without a featured-res
   assert.match(html, /INVESTMENT RESEARCH/);
 });
 
+test('homepage presents three distinct practices and the approved introduction', () => {
+  const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
+
+  assert.match(
+    html,
+    /hero-title-line[^>]*>产业研究<\/span>.*hero-title-line[^>]*>交易<\/span>.*hero-title-line[^>]*>AI 应用<\/span>/s,
+  );
+  assert.match(
+    html,
+    /关注化工、航运、矿业等周期行业与商品期货，记录产业研究、交易实践，以及 AI 对研究方法与日常生活的改变。/,
+  );
+});
+
 test('article pages put the title before secondary research metadata and move notes after the body', () => {
   const html = readFileSync(
     new URL('../dist/blog/china-refining-capital-cycle/index.html', import.meta.url),

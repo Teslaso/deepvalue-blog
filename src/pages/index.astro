@@ -10,21 +10,9 @@ const investmentRows = investmentArticles.map(entry => ({
   entry,
   preview: extractLeadImage(entry.body),
 }));
-const featuredEntry = investmentArticles[0];
 const recentLogs = publishedEntries.filter(entry => entry.data.format === 'log').slice(0, 3);
 const aiEntries = publishedEntries.filter(entry => entry.data.domain === 'ai').slice(0, 3);
 const beyondEntries = publishedEntries.filter(entry => entry.data.domain === 'beyond').slice(0, 3);
-const topicLabels = {
-  fluorochemicals: 'Fluorochemicals',
-  energy: 'Energy',
-  shipping: 'Shipping',
-  'ai-infrastructure': 'AI Infrastructure',
-};
-const confidenceLabels = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-};
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
@@ -32,14 +20,6 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', {
   timeZone: 'UTC',
 }).format(date).toUpperCase();
 const dateTime = (date: Date) => date.toISOString().slice(0, 10);
-const featuredMeta = featuredEntry ? [
-  ...featuredEntry.data.tags.slice(0, 3),
-  featuredEntry.data.companies.length > 0
-    ? `${featuredEntry.data.companies.join(' · ')}${
-      featuredEntry.data.tickers.length > 0 ? ` · ${featuredEntry.data.tickers.join(' · ')}` : ''
-    }`
-    : featuredEntry.data.tickers.join(' · '),
-].filter(Boolean) : [];
 ---
 <Base
   title="Deep Value Research"
@@ -49,7 +29,10 @@ const featuredMeta = featuredEntry ? [
     <div class="hero-grid">
       <div class="hero-copy">
         <p class="eyebrow">INDUSTRY RESEARCH · TRADING · APPLIED AI</p>
-        <h1 id="hero-title">产业研究、交易与 AI 应用</h1>
+        <h1 id="hero-title">
+          <span class="hero-title-line">产业研究</span>
+          <span class="hero-title-line">交易与 AI 应用</span>
+        </h1>
         <p class="hero-intro">
           从大宗商品与周期行业出发，研究产业演化、供需变化与资本周期，同时记录交易方法和 AI 在研究工作流中的实际应用。
         </p>
@@ -66,71 +49,7 @@ const featuredMeta = featuredEntry ? [
     </div>
   </section>
   <div class="paper">
-    <div class="issue-bar" aria-label="出版信息">
-      <span>Deep Value / Research</span>
-      <span class="olive">Published work only</span>
-      <span>Independent publication</span>
-    </div>
     <div class="content-frame">
-      <section aria-labelledby="featured-heading">
-        <div class="section-label">
-          <h2 id="featured-heading">FEATURED RESEARCH / 重点研究</h2>
-          <span>
-            {featuredEntry
-              ? `Investment · ${
-                topicLabels[featuredEntry.data.topic as keyof typeof topicLabels]
-                  || featuredEntry.data.topic
-                  || 'Research'
-              }`
-              : 'Published work only'}
-          </span>
-        </div>
-        {featuredEntry ? (
-          <article class="featured">
-            <div class="feature-main">
-              <div>
-                <div class="feature-kicker">
-                  <span>Published research</span>
-                  <time datetime={dateTime(featuredEntry.data.published_at)}>
-                    {formatDate(featuredEntry.data.published_at)}
-                  </time>
-                </div>
-                <h3>{featuredEntry.data.title}</h3>
-                {featuredEntry.data.summary && (
-                  <p class="feature-summary">{featuredEntry.data.summary}</p>
-                )}
-                {featuredMeta.length > 0 && (
-                  <div class="meta-line" aria-label="研究标签">
-                    {featuredMeta.map(item => <span>{item}</span>)}
-                  </div>
-                )}
-              </div>
-              <a class="text-link feature-link" href={`/blog/${featuredEntry.data.publish_id}`}>
-                阅读全文
-              </a>
-            </div>
-            <aside class="feature-rail" aria-label="研究判断">
-              <div class="rail-label">Research judgment</div>
-              <div class="thesis">
-                <span>Thesis</span>
-                <p>{featuredEntry.data.thesis || '完整研究判断见文章正文。'}</p>
-              </div>
-              <div class="confidence">
-                <span>Confidence</span>
-                <span>
-                  {featuredEntry.data.confidence
-                    ? confidenceLabels[featuredEntry.data.confidence]
-                    : 'Not stated'}
-                </span>
-              </div>
-            </aside>
-          </article>
-        ) : (
-          <div class="featured-empty">
-            <p>当前没有已发布的重点研究。</p>
-          </div>
-        )}
-      </section>
       <section class="investment-section" aria-labelledby="investment-heading">
         <div class="section-label">
           <h2 id="investment-heading">INVESTMENT RESEARCH / 投资研究</h2>
@@ -345,12 +264,16 @@ const featuredMeta = featuredEntry ? [
     color: var(--color-copper-on-ink);
   }
   .hero h1 {
-    max-width: 10ch;
+    max-width: none;
     margin: 1.15rem 0 1.5rem;
-    font-size: var(--h1);
+    font-size: clamp(3.75rem, 5vw, 5.4rem);
     font-weight: var(--weight-medium);
     letter-spacing: -0.035em;
     line-height: 0.98;
+  }
+  .hero-title-line {
+    display: block;
+    white-space: nowrap;
   }
   .hero-intro {
     max-width: 650px;
@@ -595,8 +518,8 @@ const featuredMeta = featuredEntry ? [
     grid-template-columns: 4.5rem minmax(0, 1fr) auto;
     gap: 1.5rem;
     align-items: start;
-    min-height: 270px;
-    padding: 2.5rem 1.5rem;
+    min-height: 230px;
+    padding: 2rem 1.5rem;
     border-bottom: 1px solid var(--border-subtle);
   }
   .investment-list li.has-preview {
@@ -619,7 +542,7 @@ const featuredMeta = featuredEntry ? [
   .entry-copy h3 {
     max-width: 24ch;
     margin: 0;
-    font-size: var(--step-3);
+    font-size: clamp(1.55rem, 1.25rem + 1vw, 2.15rem);
     font-weight: var(--weight-medium);
     letter-spacing: -0.025em;
     line-height: 1.14;
@@ -872,7 +795,7 @@ const featuredMeta = featuredEntry ? [
       padding-bottom: 2rem;
     }
     .hero h1 {
-      max-width: 8ch;
+      max-width: none;
     }
     .hero-index {
       margin: 3rem 0 0;
@@ -931,7 +854,7 @@ const featuredMeta = featuredEntry ? [
       padding-left: 1rem;
     }
     .hero h1 {
-      font-size: clamp(3.1rem, 15vw, 5rem);
+      font-size: clamp(2.5rem, 11.5vw, 3.25rem);
     }
     .hero-intro {
       font-size: 1rem;

@@ -63,12 +63,12 @@ test('Beyond provides a direct in-site entrance to the projects index', async ()
   assert.match(beyond, /href="\/projects\/"/u);
 });
 
-test('EntryList renders grouped empty states and displays its effective sort timestamp', async () => {
+test('EntryList renders grouped empty states and displays its effective date without redundant state labels', async () => {
   const entryList = await source('src/components/EntryList.astro');
 
   assert.match(entryList, /groupByFormat\s*\|\|\s*entries\.length\s*>\s*0/);
   assert.match(entryList, /effectiveEntryDate\(entry\)/);
-  assert.match(entryList, /entry\.data\.updated_at\s*\?\s*'更新'\s*:\s*'发布'/);
+  assert.doesNotMatch(entryList, /entry\.data\.updated_at\s*\?\s*'更新'\s*:\s*'发布'/);
 });
 
 test('Research Log sorts and labels entries by immutable published timestamp', async () => {
@@ -79,10 +79,11 @@ test('Research Log sorts and labels entries by immutable published timestamp', a
   assert.match(researchLog, /entry\.data\.published_at\.toISOString\(\)/);
 });
 
-test('log detail retains timestamp precision and exposes format-specific metadata labels', async () => {
+test('log detail retains timestamp precision and moves secondary metadata after the content', async () => {
   const detail = await source('src/pages/blog/[slug].astro');
 
   assert.match(detail, /dateTimeFormatter/);
   assert.match(detail, /isLog\s*\?\s*dateTimeFormatter/);
-  assert.match(detail, /aria-label=\{isLog\s*\?\s*'日志元数据'\s*:\s*'文章元数据'\}/);
+  assert.match(detail, /aria-label="文章补充信息"/);
+  assert.ok(detail.indexOf('<Content />') < detail.indexOf('ARTICLE INFORMATION'));
 });

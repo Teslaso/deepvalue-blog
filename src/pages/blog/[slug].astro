@@ -79,39 +79,42 @@ const taxonomyGroups = [
 
   <article class:list={['research-entry', { 'is-log': isLog }]}>
     <header class="research-entry-header">
-      <div class="article-header-grid">
-        <aside class="article-rail" aria-label={isLog ? '日志元数据' : '文章元数据'}>
-          <div class="format-mark">
-            <p>{isLog ? 'RESEARCH LOG' : 'RESEARCH ARTICLE'}</p>
-            <span>{domainLabels[post.data.domain]}</span>
-          </div>
-
-          <dl class="metadata-grid">
-            {metadata.map(item => (
-              <div>
-                <dt>{item.label}</dt>
-                <dd>{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </aside>
-
-        <div class="article-lead">
-          <p class="article-domain">
-            {domainLabels[post.data.domain]}
-            {post.data.topic && <span> / {post.data.topic}</span>}
-          </p>
-          <h1>{post.data.title}</h1>
-          {post.data.summary && <p class="article-summary">{post.data.summary}</p>}
-        </div>
+      <div class="article-lead">
+        <p class="article-domain">
+          <span>{domainLabels[post.data.domain]}</span>
+          {post.data.topic && <span>{post.data.topic}</span>}
+          <time datetime={post.data.published_at.toISOString()}>
+            {metadataDateFormatter.format(post.data.published_at)}
+          </time>
+        </p>
+        <h1>{post.data.title}</h1>
+        {post.data.summary && <p class="article-summary">{post.data.summary}</p>}
       </div>
+    </header>
 
+    <div class="reading-column">
+      <Content />
+    </div>
+
+    <footer class="article-notes" aria-label="文章补充信息">
       {post.data.thesis && (
         <section class="thesis-block" aria-labelledby="thesis-title">
           <p id="thesis-title">THESIS / 核心判断</p>
           <p>{post.data.thesis}</p>
         </section>
       )}
+
+      <section class="article-information" aria-labelledby="article-information-title">
+        <p id="article-information-title">ARTICLE INFORMATION / 文章信息</p>
+        <dl class="metadata-grid">
+          {metadata.map(item => (
+            <div>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {taxonomyGroups.length > 0 && (
         <dl class="taxonomy-grid">
@@ -134,11 +137,7 @@ const taxonomyGroups = [
           ) : post.data.source_title}
         </p>
       )}
-    </header>
-
-    <div class="reading-column">
-      <Content />
-    </div>
+    </footer>
   </article>
 
   <nav class="back-navigation is-bottom" aria-label="返回内容索引">
@@ -183,7 +182,7 @@ const taxonomyGroups = [
   }
 
   .research-entry-header {
-    padding: var(--space-5) 0 var(--space-6);
+    padding: var(--space-5) 0;
     border-bottom: 1px solid var(--color-ink);
   }
 
@@ -225,6 +224,7 @@ const taxonomyGroups = [
 
   .metadata-grid {
     display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin: 0;
     border-top: 1px solid var(--border-subtle);
   }
@@ -232,8 +232,12 @@ const taxonomyGroups = [
   .metadata-grid > div {
     display: grid;
     gap: 0.15rem;
-    padding: var(--space-2) 0;
+    padding: var(--space-2);
     border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .metadata-grid > div + div {
+    border-left: 1px solid var(--border-subtle);
   }
 
   .metadata-grid dt,
@@ -257,7 +261,9 @@ const taxonomyGroups = [
   .article-lead {
     display: grid;
     align-content: start;
-    gap: var(--space-3);
+    gap: var(--space-2);
+    width: min(100%, 47rem);
+    margin: 0 auto;
   }
 
   .article-domain,
@@ -267,6 +273,10 @@ const taxonomyGroups = [
   }
 
   .article-domain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.75rem;
+    align-items: center;
     color: var(--metadata-primary);
     font-family: var(--font-data);
     font-size: var(--caption);
@@ -274,16 +284,23 @@ const taxonomyGroups = [
     text-transform: uppercase;
   }
 
-  .article-domain span {
+  .article-domain span + span::before,
+  .article-domain time::before {
+    margin-right: 0.75rem;
+    color: var(--color-copper-text);
+    content: "/";
+  }
+
+  .article-domain span + span {
     color: var(--link-primary);
   }
 
   .article-lead h1 {
-    max-width: 18ch;
-    font-size: var(--step-4);
+    max-width: 22ch;
+    font-size: clamp(2.65rem, 4vw, 3.25rem);
     font-weight: var(--weight-medium);
-    letter-spacing: -0.035em;
-    line-height: 1.1;
+    letter-spacing: -0.025em;
+    line-height: 1.16;
     text-wrap: balance;
   }
 
@@ -292,18 +309,25 @@ const taxonomyGroups = [
   }
 
   .article-summary {
-    max-width: 44rem;
+    max-width: 42rem;
     color: var(--text-secondary);
-    font-size: var(--step-1);
-    line-height: 1.8;
+    font-size: clamp(1rem, 0.98rem + 0.16vw, 1.1rem);
+    line-height: 1.75;
+  }
+
+  .article-notes {
+    width: min(100%, 52rem);
+    margin: var(--space-7) auto 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-ink);
   }
 
   .thesis-block {
     display: grid;
-    grid-template-columns: minmax(10rem, 0.26fr) minmax(0, 1fr);
-    gap: clamp(2.5rem, 7vw, 7.5rem);
-    margin-top: var(--space-6);
-    padding: var(--space-4) 0;
+    grid-template-columns: minmax(8rem, 0.24fr) minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: var(--space-4);
     border-top: 1px solid var(--color-copper-text);
     border-bottom: 1px solid var(--color-copper-text);
     border-radius: 0;
@@ -315,7 +339,7 @@ const taxonomyGroups = [
   }
 
   .thesis-block p:first-child {
-    padding-left: var(--space-3);
+    padding-left: 0;
     color: var(--link-primary);
     font-family: var(--font-data);
     font-size: var(--caption);
@@ -324,10 +348,25 @@ const taxonomyGroups = [
 
   .thesis-block p:last-child {
     max-width: 44rem;
-    padding-right: var(--space-3);
-    font-size: var(--step-1);
+    padding-right: 0;
+    font-size: var(--step-0);
     font-weight: var(--weight-medium);
     line-height: 1.75;
+  }
+
+  .article-information {
+    display: grid;
+    grid-template-columns: minmax(8rem, 0.24fr) minmax(0, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  .article-information > p {
+    margin: 0;
+    color: var(--metadata-primary);
+    font-family: var(--font-data);
+    font-size: var(--caption);
+    letter-spacing: 0.08em;
   }
 
   .taxonomy-grid {
@@ -398,11 +437,11 @@ const taxonomyGroups = [
   }
 
   .reading-column {
-    width: min(100%, 52rem);
+    width: min(100%, 47rem);
     margin: var(--space-6) auto 0;
     color: var(--text-primary);
-    font-size: clamp(1rem, 0.97rem + 0.14vw, 1.08rem);
-    line-height: 1.95;
+    font-size: clamp(1rem, 0.98rem + 0.12vw, 1.08rem);
+    line-height: 1.88;
   }
 
   .reading-column :global(> :first-child) {
@@ -414,7 +453,7 @@ const taxonomyGroups = [
   }
 
   .reading-column :global(p) {
-    margin: 0 0 1.6em;
+    margin: 0 0 1.45em;
   }
 
   .reading-column :global(h2),
@@ -588,7 +627,8 @@ const taxonomyGroups = [
 
   @media (max-width: 800px) {
     .article-header-grid,
-    .thesis-block {
+    .thesis-block,
+    .article-information {
       grid-template-columns: 1fr;
       gap: var(--space-4);
     }
@@ -612,7 +652,7 @@ const taxonomyGroups = [
     }
 
     .article-lead h1 {
-      font-size: var(--step-3);
+      font-size: clamp(2.25rem, 7vw, 3rem);
     }
 
     .thesis-block p:first-child,
@@ -643,6 +683,20 @@ const taxonomyGroups = [
 
     .article-summary {
       font-size: var(--step-0);
+    }
+
+    .article-lead h1 {
+      font-size: clamp(2.05rem, 9vw, 2.5rem);
+      line-height: 1.18;
+    }
+
+    .article-notes {
+      margin-top: var(--space-6);
+      padding-top: var(--space-4);
+    }
+
+    .thesis-block {
+      padding: var(--space-3);
     }
 
     .taxonomy-grid {

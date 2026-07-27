@@ -8,17 +8,6 @@ const {
   compact = false,
 } = Astro.props;
 
-const domainLabels = {
-  investment: '投资研究',
-  ai: 'AI 与技术',
-  beyond: '边界之外',
-};
-
-const formatLabels = {
-  article: '研究文章',
-  log: '研究日志',
-};
-
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
   year: 'numeric',
   month: '2-digit',
@@ -89,25 +78,14 @@ const groups = groupByFormat
                     <time datetime={effectiveEntryDate(entry).toISOString()}>
                       {dateFormatter.format(effectiveEntryDate(entry))}
                     </time>
-                    <span>{entry.data.updated_at ? '更新' : '发布'}</span>
-                    <span>{entry.data.section || entry.data.topic || 'general'}</span>
                   </div>
 
                   <div class="entry-main">
-                    <div class="entry-metadata">
-                      <span>{domainLabels[entry.data.domain]}</span>
-                      <span>{formatLabels[entry.data.format]}</span>
-                      {entry.data.topic && <span>{entry.data.topic}</span>}
-                    </div>
+                    {entry.data.topic && <div class="entry-metadata">{entry.data.topic}</div>}
                     <a class="entry-title" href={`/blog/${entry.data.publish_id}/`}>
                       {entry.data.title}
                     </a>
                     {entry.data.summary && <p class="entry-summary">{entry.data.summary}</p>}
-                    {entry.data.tags.length > 0 && (
-                      <div class="entry-tags" aria-label="标签">
-                        {entry.data.tags.map(tag => <span class="entry-tag">#{tag}</span>)}
-                      </div>
-                    )}
                   </div>
 
                   <a class="entry-action" href={`/blog/${entry.data.publish_id}/`}>
@@ -243,10 +221,10 @@ const groups = groupByFormat
 
   .entry-item {
     display: grid;
-    grid-template-columns: minmax(7.5rem, 0.23fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(6.5rem, 0.16fr) minmax(0, 1fr) auto;
     gap: clamp(1.25rem, 3vw, 3.25rem);
     align-items: start;
-    padding: clamp(1.55rem, 3vw, 2.5rem) 0;
+    padding: clamp(1.35rem, 2.5vw, 2rem) 0;
     border-bottom: 1px solid var(--border-subtle);
   }
 
@@ -270,13 +248,6 @@ const groups = groupByFormat
     gap: var(--space-2);
   }
 
-  .entry-metadata,
-  .entry-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
-  }
-
   .entry-metadata {
     color: var(--metadata-primary);
     font-family: var(--font-data);
@@ -285,16 +256,10 @@ const groups = groupByFormat
     text-transform: uppercase;
   }
 
-  .entry-metadata span + span::before {
-    margin-right: var(--space-2);
-    color: var(--color-copper-text);
-    content: "/";
-  }
-
   .entry-title {
     width: fit-content;
     max-width: 50rem;
-    font-size: var(--step-2);
+    font-size: clamp(1.35rem, 1.2rem + 0.55vw, 1.65rem);
     font-weight: var(--weight-medium);
     letter-spacing: -0.015em;
     line-height: 1.24;
@@ -312,23 +277,6 @@ const groups = groupByFormat
     color: var(--text-secondary);
     font-size: var(--step-0);
     line-height: 1.75;
-  }
-
-  .entry-tags {
-    margin-top: var(--space-1);
-  }
-
-  .entry-tag {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 0.18rem 0.45rem;
-    color: var(--metadata-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: 0;
-    font-family: var(--font-data);
-    font-size: 0.66rem;
-    letter-spacing: 0.03em;
   }
 
   .entry-action {

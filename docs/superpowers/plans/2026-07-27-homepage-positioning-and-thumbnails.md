@@ -29,7 +29,7 @@
 - `src/lib/entry-utils.mjs`: Owns the pure `extractLeadImage(markdown)` helper alongside existing entry-selection helpers.
 - `tests/entry-utils.test.mjs`: Verifies first-image extraction, fallback behavior, and first-image precedence.
 - `src/pages/index.astro`: Owns confirmed hero copy, homepage-only preview row preparation, thumbnail markup, and responsive presentation.
-- `tests/editorial-contracts.test.mjs`: Protects the confirmed hero text and homepage thumbnail integration contract.
+- `tests/editorial-contracts.test.mjs`: Remains unchanged; static human copy and CSS layout are verified in the rendered page rather than by source-text assertions.
 
 ### Task 1: First-image extraction helper
 
@@ -126,46 +126,13 @@ git commit -m "feat: extract article lead images"
 ### Task 2: Confirmed homepage positioning copy
 
 **Files:**
-- Modify: `tests/editorial-contracts.test.mjs`
 - Modify: `src/pages/index.astro`
 
 **Interfaces:**
 - Consumes: The confirmed static copy in Global Constraints.
 - Produces: One hero eyebrow, one H1, one introduction, and exactly three hero-index rows.
 
-- [ ] **Step 1: Write the failing editorial contract**
-
-Append to `tests/editorial-contracts.test.mjs`:
-
-```js
-test('homepage hero presents industry research, trading, and applied AI', async () => {
-  const homepage = await source('src/pages/index.astro');
-
-  assert.match(homepage, /INDUSTRY RESEARCH · TRADING · APPLIED AI/u);
-  assert.match(homepage, /产业研究、交易与 AI 应用/u);
-  assert.match(
-    homepage,
-    /从大宗商品与周期行业出发，研究产业演化、供需变化与资本周期，同时记录交易方法和 AI 在研究工作流中的实际应用。/u,
-  );
-  assert.match(homepage, /<span>01<\/span><span>产业研究<\/span>/u);
-  assert.match(homepage, /<span>02<\/span><span>市场与交易<\/span>/u);
-  assert.match(homepage, /<span>03<\/span><span>AI 应用<\/span>/u);
-  assert.doesNotMatch(homepage, /Investment · Trading · Commodities/u);
-  assert.doesNotMatch(homepage, /<span>04<\/span>/u);
-});
-```
-
-- [ ] **Step 2: Run the editorial contract and verify RED**
-
-Run:
-
-```bash
-node --test tests/editorial-contracts.test.mjs
-```
-
-Expected: FAIL because the homepage still contains the old eyebrow, title, introduction, and four-row index.
-
-- [ ] **Step 3: Replace the hero and page-description copy**
+- [ ] **Step 1: Replace the hero and page-description copy**
 
 In `src/pages/index.astro`, update `<Base description>`, `.eyebrow`, `#hero-title`, `.hero-intro`, and `.hero-index` to:
 
@@ -196,65 +163,43 @@ In `src/pages/index.astro`, update `<Base description>`, `.eyebrow`, `#hero-titl
   </section>
 ```
 
-- [ ] **Step 4: Run the editorial contract and verify GREEN**
+- [ ] **Step 2: Build the rendered homepage**
 
 Run:
 
 ```bash
-node --test tests/editorial-contracts.test.mjs
+npm run build
 ```
 
-Expected: all editorial contract tests PASS with zero failures.
+Expected: Astro builds `/` with exit code 0. Exact copy and three-row rendering are verified against the rendered DOM in Task 4, avoiding brittle source-text tests for human prose.
 
-- [ ] **Step 5: Commit the homepage positioning**
+- [ ] **Step 3: Commit the homepage positioning**
 
 ```bash
-git add src/pages/index.astro tests/editorial-contracts.test.mjs
+git add src/pages/index.astro
 git commit -m "feat: sharpen homepage positioning"
 ```
 
 ### Task 3: Homepage investment thumbnail rows
 
 **Files:**
-- Modify: `tests/editorial-contracts.test.mjs`
 - Modify: `src/pages/index.astro`
 
 **Interfaces:**
 - Consumes: `extractLeadImage(markdown)` from Task 1 and each Astro content entry’s `body` string.
 - Produces: `investmentRows: Array<{ entry, preview: { src: string, alt: string } | undefined }>` and optional linked `.entry-preview` markup.
 
-- [ ] **Step 1: Write the failing homepage thumbnail contract**
-
-Append to `tests/editorial-contracts.test.mjs`:
-
-```js
-test('homepage investment rows render optional linked lead-image previews', async () => {
-  const homepage = await source('src/pages/index.astro');
-
-  assert.match(homepage, /import\s*\{\s*extractLeadImage\s*\}\s*from\s*'\.\.\/lib\/entry-utils\.mjs'/u);
-  assert.match(homepage, /preview:\s*extractLeadImage\(entry\.body\)/u);
-  assert.match(homepage, /class="entry-preview"/u);
-  assert.match(homepage, /loading="lazy"/u);
-  assert.match(homepage, /decoding="async"/u);
-  assert.match(homepage, /aspect-ratio:\s*4\s*\/\s*3/u);
-  assert.match(
-    homepage,
-    /class:list=\{\['investment-row', \{ 'has-preview': Boolean\(preview\) \}\]\}/u,
-  );
-});
-```
-
-- [ ] **Step 2: Run the editorial contract and verify RED**
+- [ ] **Step 1: Confirm the helper is green before integration**
 
 Run:
 
 ```bash
-node --test tests/editorial-contracts.test.mjs
+node --test tests/entry-utils.test.mjs
 ```
 
-Expected: FAIL because the homepage does not import the helper or render preview images.
+Expected: the tested `extractLeadImage(markdown)` behavior from Task 1 passes before the homepage consumes it.
 
-- [ ] **Step 3: Prepare preview row data**
+- [ ] **Step 2: Prepare preview row data**
 
 At the top of `src/pages/index.astro`, add:
 
@@ -271,7 +216,7 @@ const investmentRows = investmentArticles.map(entry => ({
 }));
 ```
 
-- [ ] **Step 4: Render the optional linked preview**
+- [ ] **Step 3: Render the optional linked preview**
 
 Replace the investment list mapping with:
 
@@ -318,7 +263,7 @@ Replace the investment list mapping with:
 ))}
 ```
 
-- [ ] **Step 5: Add desktop and responsive thumbnail CSS**
+- [ ] **Step 4: Add desktop and responsive thumbnail CSS**
 
 Replace the base investment-row grid rule and add preview styles:
 
@@ -385,20 +330,21 @@ At `max-width: 820px`, move the preview below the text:
 }
 ```
 
-- [ ] **Step 6: Run focused tests and verify GREEN**
+- [ ] **Step 5: Run focused tests and the production build**
 
 Run:
 
 ```bash
-node --test tests/entry-utils.test.mjs tests/editorial-contracts.test.mjs
+node --test tests/entry-utils.test.mjs
+npm run build
 ```
 
-Expected: both test files PASS with zero failures.
+Expected: helper tests PASS and Astro builds the rendered thumbnail rows with zero failures. DOM structure, image loading, links, and responsive behavior are verified in Task 4.
 
-- [ ] **Step 7: Commit the thumbnail feature**
+- [ ] **Step 6: Commit the thumbnail feature**
 
 ```bash
-git add src/pages/index.astro tests/editorial-contracts.test.mjs
+git add src/pages/index.astro
 git commit -m "feat: preview article images on homepage"
 ```
 

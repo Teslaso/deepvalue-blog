@@ -32,6 +32,16 @@ test('homepage presents three distinct practices and the approved introduction',
   );
 });
 
+test('public navigation and homepage omit dormant journal, boundary, and editorial-method surfaces', () => {
+  const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(html, /href="\/research-log\/"/);
+  assert.doesNotMatch(html, /href="\/beyond\/"/);
+  assert.doesNotMatch(html, /RESEARCH LOG|研究日志/);
+  assert.doesNotMatch(html, /BEYOND THE BOUNDARY|边界之外/);
+  assert.doesNotMatch(html, /Editorial method|把判断放回证据/);
+});
+
 test('article pages put the title before secondary research metadata and move notes after the body', () => {
   const html = readFileSync(
     new URL('../dist/blog/china-refining-capital-cycle/index.html', import.meta.url),

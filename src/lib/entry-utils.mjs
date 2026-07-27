@@ -40,3 +40,15 @@ export function selectPublished(entries, filters = {}) {
 
   return sortEntriesNewestFirst(selected);
 }
+
+export function extractLeadImage(markdown) {
+  if (typeof markdown !== 'string' || markdown === '') return undefined;
+
+  const match = markdown.match(/!\[([^\]]*)\]\(\s*(<?[^)\s>]+>?)\s*\)/u);
+  if (!match) return undefined;
+
+  return {
+    alt: match[1],
+    src: match[2].replace(/^<|>$/gu, ''),
+  };
+}

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   effectiveEntryDate,
+  extractLeadImage,
   isPublished,
   selectPublished,
   sortEntriesByPublishedNewestFirst,
@@ -110,4 +111,35 @@ test('sortEntriesByPublishedNewestFirst preserves chronological log time', () =>
     sortEntriesByPublishedNewestFirst(entries).map(item => item.id),
     ['newer', 'middle', 'older-updated'],
   );
+});
+
+test('extractLeadImage returns the first standard Markdown image', () => {
+  const markdown = [
+    '开场文字。',
+    '![炼化周期](/media/refining/hero.webp)',
+    '![第二张图](/media/refining/chart.webp)',
+  ].join('\n\n');
+
+  assert.deepEqual(extractLeadImage(markdown), {
+    src: '/media/refining/hero.webp',
+    alt: '炼化周期',
+  });
+});
+
+test('extractLeadImage preserves empty alt text and ignores ordinary links', () => {
+  const markdown = [
+    '[行业资料](/media/refining/report.pdf)',
+    '![](/media/refining/hero.webp)',
+  ].join('\n\n');
+
+  assert.deepEqual(extractLeadImage(markdown), {
+    src: '/media/refining/hero.webp',
+    alt: '',
+  });
+});
+
+test('extractLeadImage returns undefined when no standard image exists', () => {
+  assert.equal(extractLeadImage('只有正文和[普通链接](/about/)。'), undefined);
+  assert.equal(extractLeadImage(''), undefined);
+  assert.equal(extractLeadImage(undefined), undefined);
 });

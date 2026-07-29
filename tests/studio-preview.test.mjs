@@ -55,9 +55,9 @@ test('renders Markdown structures, callouts, resolved embeds, published links, f
   assert.deepEqual(preview.diagnostics, []);
 });
 
-test('uses visible text for unpublished wiki links and reports unresolved embeds', async () => {
+test('uses visible text for unpublished wiki links and reports unresolved embeds without Vault paths', async () => {
   const preview = await renderStudioPreview({
-    body: '[[Private Note]]\n\n![[missing.png|图表]]',
+    body: '[[Private/Private Note]]\n\n![[Attachments/Confidential/missing.png|图表]]',
     metadata: { title: '标题' },
     resolveWikiLink: () => ({ kind: 'plain-text', label: 'Private Note' }),
     resolveAsset: () => undefined,
@@ -69,10 +69,70 @@ test('uses visible text for unpublished wiki links and reports unresolved embeds
   assert.deepEqual(preview.diagnostics, [
     {
       code: 'unresolved_embed',
-      reference: 'missing.png',
-      message: 'Could not resolve embedded asset "missing.png"',
+      reference: '图表',
+      message: 'Could not resolve embedded asset',
     },
   ]);
+  assert.doesNotMatch(JSON.stringify(preview.diagnostics), /Attachments|Confidential|missing\.png/);
+});
+
+test('redacts private resolver targets from unresolved and unsafe diagnostics', async () => {
+  const preview = await renderStudioPreview({
+    body: '[[Private/Board/Strategy]] ![[Attachments/Secret/Plan.png]]',
+    metadata: { title: '标题' },
+    resolveWikiLink: () => ({ kind: 'published', href: 'javascript:alert(1)', label: '公开标签' }),
+    resolveAsset: () => ({ src: 'javascript:alert(1)', alt: '公开图片' }),
+  });
+
+  assert.deepEqual(preview.diagnostics, [
+    {
+      code: 'unsafe_wiki_link',
+      reference: '公开标签',
+      message: 'Wiki link resolved to an unsafe URL',
+    },
+    {
+      code: 'unsafe_embed_url',
+      reference: '公开图片',
+      message: 'Embedded asset resolved to an unsafe URL',
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(preview.diagnostics), /Private|Board|Strategy|Attachments|Secret|Plan/);
+});
+
+test('does not resolve Obsidian syntax inside fenced, inline, multiline, or indented code', async () => {
+  const calls = [];
+  const preview = await renderStudioPreview({
+    body: [
+      '[[Live]]',
+      '',
+      '```md',
+      '[[Fenced]] ![[Fenced.png]]',
+      '```',
+      '',
+      '`[[Inline]] ![[Inline.png]]`',
+      '',
+      '`starts',
+      '[[Multiline]] ![[Multiline.png]]',
+      'ends`',
+      '',
+      '    [[Indented]] ![[Indented.png]]',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(`wiki:${target}`);
+      return { kind: 'plain-text', label: target };
+    },
+    resolveAsset: (target) => {
+      calls.push(`asset:${target}`);
+      return { src: `/media/${target}` };
+    },
+  });
+
+  assert.deepEqual(calls, ['wiki:Live']);
+  assert.match(preview.html, /\[\[Fenced\]\] !\[\[Fenced\.png\]\]/);
+  assert.match(preview.html, /\[\[Inline\]\] !\[\[Inline\.png\]\]/);
+  assert.match(preview.html, /\[\[Multiline\]\] !\[\[Multiline\.png\]\]/);
+  assert.match(preview.html, /\[\[Indented\]\] !\[\[Indented\.png\]\]/);
 });
 
 test('removes active raw HTML, event handlers, and unsafe URL schemes', async () => {
@@ -109,5 +169,22 @@ test('suffixes repeated heading IDs deterministically after stripping inline mar
     { depth: 2, text: '炼化 利润', id: '炼化-利润' },
     { depth: 2, text: '炼化 利润', id: '炼化-利润-2' },
     { depth: 2, text: '炼化 利润', id: '炼化-利润-3' },
+  ]);
+});
+
+test('reserves generated footnote IDs and decodes outline text without duplicate document IDs', async () => {
+  const preview = await renderStudioPreview({
+    body: '# Footnote 1\n\n# AT&amp;T\n\n引用[^1]\n\n[^1]: 注释。',
+    metadata: { title: '标题' },
+  });
+  const ids = [...preview.html.matchAll(/\bid="([^"]+)"/gu)].map((match) => match[1]);
+
+  assert.equal(new Set(ids).size, ids.length);
+  assert.match(preview.html, /<h1 id="footnote-1-2">Footnote 1<\/h1>/);
+  assert.match(preview.html, /<li id="footnote-1">/);
+  assert.match(preview.html, /href="#footnote-1" data-footnote-ref/);
+  assert.deepEqual(preview.outline, [
+    { depth: 1, text: 'Footnote 1', id: 'footnote-1-2' },
+    { depth: 1, text: 'AT&T', id: 'at-t' },
   ]);
 });

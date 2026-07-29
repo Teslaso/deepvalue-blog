@@ -75,6 +75,12 @@ function visibleWikiLabel(target, alias) {
   return label || 'Note';
 }
 
+function safeDiagnosticReference(value) {
+  const reference = String(value ?? '').trim().replaceAll('\\', '/');
+  const basename = reference.split('/').at(-1)?.replace(/\.md$/iu, '') ?? '';
+  return basename || 'Note';
+}
+
 function stableCalloutLabel(type) {
   const normalized = type.toLocaleLowerCase('en-US');
   if (CALLOUT_LABELS[normalized]) return CALLOUT_LABELS[normalized];
@@ -104,6 +110,10 @@ function closesFence(line, openFence) {
   const marker = fenceMarker(line);
   return Boolean(marker && marker[0] === openFence[0] && marker.length >= openFence.length
     && new RegExp(`^(?: {0,3})(?:>\\s*)*${openFence[0] === '`' ? '`' : '~'}{${openFence.length},}\\s*$`, 'u').test(line));
+}
+
+function isIndentedCodeLine(line) {
+  return /^(?: {4}|\t)(?![-+*][ \t]|\d+[.)][ \t])/u.test(line);
 }
 
 function safeUrl(value, { image = false } = {}) {
@@ -162,10 +172,10 @@ async function replaceObsidianSyntax(segment, context) {
       const asset = normalizeAsset(await context.resolveAsset?.(target, { alias, metadata: context.metadata }));
       const src = safeUrl(asset?.src, { image: true });
       if (!asset) {
-        context.diagnostics.push(diagnostic('unresolved_embed', target, `Could not resolve embedded asset "${target}"`));
+        context.diagnostics.push(diagnostic('unresolved_embed', safeDiagnosticReference(alias ?? label), 'Could not resolve embedded asset'));
         result += escapeMarkdownText(label);
       } else if (!src) {
-        context.diagnostics.push(diagnostic('unsafe_embed_url', target, `Embedded asset "${target}" resolved to an unsafe URL`));
+        context.diagnostics.push(diagnostic('unsafe_embed_url', safeDiagnosticReference(alias ?? asset.alt ?? label), 'Embedded asset resolved to an unsafe URL'));
         result += escapeMarkdownText(label);
       } else {
         const alt = typeof alias === 'string' && alias !== '' ? alias : (asset.alt ?? label);
@@ -181,7 +191,7 @@ async function replaceObsidianSyntax(segment, context) {
       } else if (resolved?.kind === 'published' || resolved?.kind === 'link') {
         const href = safeUrl(resolved.href);
         if (!href) {
-          context.diagnostics.push(diagnostic('unsafe_wiki_link', target, `Wiki link "${target}" resolved to an unsafe URL`));
+          context.diagnostics.push(diagnostic('unsafe_wiki_link', safeDiagnosticReference(resolved.label ?? label), 'Wiki link resolved to an unsafe URL'));
           result += escapeMarkdownText(resolved.label ?? label);
         } else {
           const title = typeof resolved.title === 'string' && resolved.title.trim() !== ''
@@ -190,7 +200,7 @@ async function replaceObsidianSyntax(segment, context) {
           result += `[${escapeMarkdownText(resolved.label ?? label)}](<${href}>${title})`;
         }
       } else {
-        context.diagnostics.push(diagnostic('unresolved_wiki_link', target, `Could not resolve wiki link "${target}"`));
+        context.diagnostics.push(diagnostic('unresolved_wiki_link', safeDiagnosticReference(alias ?? label), 'Could not resolve wiki link'));
         result += escapeMarkdownText(label);
       }
     }
@@ -203,6 +213,14 @@ async function transformOutsideInlineCode(line, context) {
   let result = '';
   let cursor = 0;
   while (cursor < line.length) {
+    if (context.inlineCodeDelimiter) {
+      const closing = line.indexOf(context.inlineCodeDelimiter, cursor);
+      if (closing === -1) return result + line.slice(cursor);
+      result += line.slice(cursor, closing + context.inlineCodeDelimiter.length);
+      cursor = closing + context.inlineCodeDelimiter.length;
+      context.inlineCodeDelimiter = undefined;
+      continue;
+    }
     const opening = line.indexOf('`', cursor);
     if (opening === -1) return result + removeUnsafeMarkdownLinks(await replaceObsidianSyntax(line.slice(cursor), context));
     result += removeUnsafeMarkdownLinks(await replaceObsidianSyntax(line.slice(cursor, opening), context));
@@ -210,7 +228,10 @@ async function transformOutsideInlineCode(line, context) {
     while (line[opening + runLength] === '`') runLength += 1;
     const marker = '`'.repeat(runLength);
     const closing = line.indexOf(marker, opening + runLength);
-    if (closing === -1) return result + line.slice(opening);
+    if (closing === -1) {
+      context.inlineCodeDelimiter = marker;
+      return result + line.slice(opening);
+    }
     result += line.slice(opening, closing + runLength);
     cursor = closing + runLength;
   }
@@ -235,13 +256,26 @@ async function preprocessMarkdown(body, context) {
       output += line + ending;
       continue;
     }
-    output += `${await transformOutsideInlineCode(transformCalloutHeader(line), context)}${ending}`;
+    if (isIndentedCodeLine(line)) {
+      output += line + ending;
+      continue;
+    }
+    const source = context.inlineCodeDelimiter ? line : transformCalloutHeader(line);
+    output += `${await transformOutsideInlineCode(source, context)}${ending}`;
   }
   return output;
 }
 
 function outlineText(rawText) {
-  return rawText.replace(/<[^>]*>/gu, '').replace(/\s+/gu, ' ').trim();
+  return rawText
+    .replace(/<[^>]*>/gu, '')
+    .replace(/&(amp|quot|apos|nbsp|lt|gt);|&#(x[\da-f]+|\d+);/giu, (entity, named, numeric) => {
+      if (named) return { amp: '&', quot: '"', apos: "'", nbsp: ' ', lt: '<', gt: '>' }[named.toLocaleLowerCase('en-US')];
+      const value = numeric.startsWith('x') ? Number.parseInt(numeric.slice(1), 16) : Number.parseInt(numeric, 10);
+      return Number.isInteger(value) && value >= 0 && value <= 0x10ffff ? String.fromCodePoint(value) : entity;
+    })
+    .replace(/\s+/gu, ' ')
+    .trim();
 }
 
 function headingSlug(text) {
@@ -253,16 +287,39 @@ function headingSlug(text) {
   return slug || 'section';
 }
 
-function createRenderer(outline) {
-  const usedIds = new Map();
+function collectReservedFootnoteIds(markdown) {
+  const labels = new Set();
+  const referenceCounts = new Map();
+  for (const match of markdown.matchAll(/(?:^|\n)[ \t]{0,3}\[\^([^\]\n]+)\]:/gu)) labels.add(match[1]);
+  for (const match of markdown.matchAll(/\[\^([^\]\n]+)\](?!:)/gu)) {
+    referenceCounts.set(match[1], (referenceCounts.get(match[1]) ?? 0) + 1);
+  }
+  const reserved = new Set(['footnote-label']);
+  for (const label of labels) {
+    const encoded = encodeURIComponent(label);
+    reserved.add(`footnote-${encoded}`);
+    const count = referenceCounts.get(label) ?? 1;
+    for (let index = 1; index <= count; index += 1) {
+      reserved.add(`footnote-ref-${encoded}${index === 1 ? '' : `-${index}`}`);
+    }
+  }
+  return reserved;
+}
+
+function createRenderer(outline, reservedIds) {
+  const usedIds = new Set();
   return {
     heading({ tokens, depth }) {
       const rawText = this.parser.parseInline(tokens, this.parser.textRenderer);
       const text = outlineText(rawText);
       const baseId = headingSlug(text);
-      const count = (usedIds.get(baseId) ?? 0) + 1;
-      usedIds.set(baseId, count);
-      const id = count === 1 ? baseId : `${baseId}-${count}`;
+      let count = 1;
+      let id = baseId;
+      while (reservedIds.has(id) || usedIds.has(id)) {
+        count += 1;
+        id = `${baseId}-${count}`;
+      }
+      usedIds.add(id);
       outline.push({ depth, text, id });
       return `<h${depth} id="${escapeHtmlAttribute(id)}">${this.parser.parseInline(tokens)}</h${depth}>\n`;
     },
@@ -293,7 +350,7 @@ export async function renderStudioPreview({
     resolveWikiLink,
   });
   const outline = [];
-  const marked = new Marked({ gfm: true, renderer: createRenderer(outline) })
+  const marked = new Marked({ gfm: true, renderer: createRenderer(outline, collectReservedFootnoteIds(markdown)) })
     .use(markedFootnote());
   const rendered = await marked.parse(markdown);
   return {

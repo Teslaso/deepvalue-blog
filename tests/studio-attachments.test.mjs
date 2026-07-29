@@ -5,6 +5,7 @@ import {
   mkdtemp,
   mkdir,
   readFile,
+  readdir,
   realpath,
   rm,
   symlink,
@@ -159,6 +160,65 @@ test('saveStudioAttachment reuses an identical destination and never overwrites 
     await writeFile(path.join(fixture.vaultRoot, first.relativePath), Buffer.from('different'));
     await assert.rejects(saveStudioAttachment(fixture.config, input));
     assert.deepEqual(await readFile(path.join(fixture.vaultRoot, first.relativePath)), Buffer.from('different'));
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('saveStudioAttachment rejects aliases that would make its Obsidian embed ambiguous or injectable', async () => {
+  const fixture = await createFixture();
+
+  try {
+    for (const alt of ['chart]]', 'chart|caption', 'chart\n# injected', 'chart\rnext', 'chart\x01']) {
+      await assert.rejects(
+        saveStudioAttachment(fixture.config, {
+          bytes: PNG,
+          filename: 'chart.png',
+          mimeType: 'image/png',
+          alt,
+        }),
+        (error) => error.code === 'invalid_alt',
+      );
+    }
+    assert.deepEqual(await readdir(fixture.config.studioAttachmentRoot), []);
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('saveStudioAttachment lowercases before filtering Unicode filename characters', async () => {
+  const fixture = await createFixture();
+
+  try {
+    const saved = await saveStudioAttachment(fixture.config, {
+      bytes: PNG,
+      filename: 'İ.png',
+      mimeType: 'image/png',
+      alt: '图',
+    });
+    assert.match(saved.relativePath, /^Attachments\/Studio\/i-[a-f0-9]{8}\.png$/u);
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('saveStudioAttachment preserves caller bytes and converges concurrent identical saves on one file', async () => {
+  const fixture = await createFixture();
+  const bytes = Buffer.from(PNG);
+  const originalBytes = Buffer.from(bytes);
+  const input = {
+    bytes,
+    filename: '炼化 利润.png',
+    mimeType: 'image/png',
+    alt: '炼化利润图',
+  };
+
+  try {
+    const saved = await Promise.all(Array.from({ length: 8 }, () => saveStudioAttachment(fixture.config, input)));
+    assert.deepEqual(bytes, originalBytes);
+    assert.equal(new Set(saved.map(({ relativePath }) => relativePath)).size, 1);
+    assert.match(saved[0].relativePath, /^Attachments\/Studio\/炼化-利润-[a-f0-9]{8}\.png$/u);
+    assert.deepEqual(await readdir(fixture.config.studioAttachmentRoot), [path.basename(saved[0].relativePath)]);
   } finally {
     await removeFixture(fixture.root);
   }

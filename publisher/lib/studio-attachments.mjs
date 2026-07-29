@@ -80,9 +80,9 @@ function safeBasename(filename) {
     throw attachmentError('Studio attachment filename must not contain a path', 'unsafe_path');
   }
 
-  const stem = filename.replace(/\.[^.]*$/u, '').normalize('NFKC');
+  const stem = filename.replace(/\.[^.]*$/u, '').normalize('NFKC').toLowerCase();
   const basename = [...stem]
-    .map((character) => (/^[\p{L}\p{N}]$/u.test(character) ? character.toLowerCase() : '-'))
+    .map((character) => (/^[\p{L}\p{N}]$/u.test(character) ? character : '-'))
     .join('')
     .replace(/-+/gu, '-')
     .replace(/^-|-$/gu, '');
@@ -90,6 +90,14 @@ function safeBasename(filename) {
     throw attachmentError('Studio attachment filename must contain letters or numbers', 'invalid_filename');
   }
   return basename;
+}
+
+function safeEmbedAlt(alt, fallback) {
+  if (alt === undefined) return fallback;
+  if (typeof alt !== 'string' || /[\]|\x00-\x1f\x7f]/u.test(alt)) {
+    throw attachmentError('Studio attachment alias contains unsafe Obsidian syntax', 'invalid_alt');
+  }
+  return alt;
 }
 
 async function requiredDirectory(candidate, label) {
@@ -215,6 +223,7 @@ export async function saveStudioAttachment(config, { bytes: rawBytes, filename, 
     throw attachmentError('Studio attachments must be PNG, JPEG, WebP, AVIF, or GIF images', 'unsupported_attachment');
   }
   const basename = safeBasename(filename);
+  const embedAlt = safeEmbedAlt(alt, basename);
   const { vaultRoot, attachmentRoot } = await attachmentDestination(config);
   const digest = sha256(bytes);
   const fileName = `${basename}-${digest.slice(0, 8)}.${extension}`;
@@ -226,7 +235,6 @@ export async function saveStudioAttachment(config, { bytes: rawBytes, filename, 
   }
   await writeNewOrReuse(destination, bytes);
 
-  const embedAlt = typeof alt === 'string' ? alt : basename;
   return {
     relativePath,
     embed: `![[${relativePath}|${embedAlt}]]`,

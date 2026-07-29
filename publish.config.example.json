@@ -5,6 +5,14 @@
   "attachmentRoots": [
     "Attachments"
   ],
+  "studioWorkspaces": [
+    {
+      "id": "research",
+      "label": "产业研究",
+      "path": "Publishing/Research"
+    }
+  ],
+  "studioAttachmentRoot": "Attachments/Studio",
   "ignoreFolders": [
     ".obsidian",
     ".trash",

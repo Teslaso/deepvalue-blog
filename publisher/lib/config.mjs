@@ -1,5 +1,9 @@
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
+import {
+  resolveExistingContainedPath,
+  resolveMissingContainedPath,
+} from './studio-paths.mjs';
 
 const DEFAULT_ENTRY_OUTPUT_DIR = 'src/content/entries';
 const DEFAULT_MEDIA_OUTPUT_DIR = 'public/media';
@@ -77,6 +81,140 @@ function normalizeStringList(value, fallback) {
   if (!Array.isArray(value)) return null;
   if (!value.every((item) => typeof item === 'string' && item.trim() !== '')) return null;
   return value.map((item) => item.trim());
+}
+
+function studioDiagnosticFromPathError(filename, field, error) {
+  return diagnostic(filename, field, error.message, error.code ?? 'path_error');
+}
+
+async function validateStudioConfig({ config, normalizedVaultRoot, filename, diagnostics }) {
+  const hasWorkspaces = config.studioWorkspaces !== undefined;
+  const hasAttachmentRoot = config.studioAttachmentRoot !== undefined;
+  if (!hasWorkspaces && !hasAttachmentRoot) {
+    return { studioWorkspaces: [], studioAttachmentRoot: undefined };
+  }
+
+  const studioWorkspaces = [];
+  if (!hasWorkspaces) {
+    diagnostics.push(diagnostic(
+      filename,
+      'studioWorkspaces',
+      'Studio workspaces are required when a studio attachment destination is configured',
+      'required',
+    ));
+  } else if (!Array.isArray(config.studioWorkspaces)) {
+    diagnostics.push(diagnostic(
+      filename,
+      'studioWorkspaces',
+      'Studio workspaces must be an array',
+      'invalid_type',
+    ));
+  } else {
+    const workspaceIds = new Set();
+    for (const [index, workspace] of config.studioWorkspaces.entries()) {
+      const field = `studioWorkspaces[${index}]`;
+      if (!workspace || typeof workspace !== 'object' || Array.isArray(workspace)) {
+        diagnostics.push(diagnostic(filename, field, 'Studio workspace must be an object', 'invalid_type'));
+        continue;
+      }
+
+      const idField = `${field}.id`;
+      if (typeof workspace.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(workspace.id)) {
+        diagnostics.push(diagnostic(
+          filename,
+          idField,
+          'Studio workspace ID must use lowercase letters, numbers, and single hyphens',
+          'invalid_workspace_id',
+        ));
+      }
+      if (typeof workspace.id === 'string') {
+        if (workspaceIds.has(workspace.id)) {
+          diagnostics.push(diagnostic(
+            filename,
+            idField,
+            `Studio workspace ID "${workspace.id}" must be unique`,
+            'duplicate_workspace_id',
+          ));
+        }
+        workspaceIds.add(workspace.id);
+      }
+
+      const labelField = `${field}.label`;
+      if (typeof workspace.label !== 'string' || workspace.label.trim() === '') {
+        diagnostics.push(diagnostic(
+          filename,
+          labelField,
+          'Studio workspace label must be a non-empty string',
+          'invalid_workspace_label',
+        ));
+      }
+
+      const pathField = `${field}.path`;
+      if (typeof workspace.path === 'string' && path.isAbsolute(workspace.path)) {
+        diagnostics.push(diagnostic(
+          filename,
+          pathField,
+          'Studio workspace path must be relative to the Vault',
+          'absolute_path',
+        ));
+        continue;
+      }
+      if (!normalizedVaultRoot) continue;
+
+      try {
+        const resolvedPath = await resolveExistingContainedPath({
+          root: normalizedVaultRoot,
+          rawPath: workspace.path,
+          label: 'Studio workspace path',
+          allowRoot: false,
+        });
+        if (
+          typeof workspace.id === 'string'
+          && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(workspace.id)
+          && typeof workspace.label === 'string'
+          && workspace.label.trim() !== ''
+        ) {
+          studioWorkspaces.push({
+            id: workspace.id,
+            label: workspace.label.trim(),
+            path: resolvedPath,
+          });
+        }
+      } catch (error) {
+        diagnostics.push(studioDiagnosticFromPathError(filename, pathField, error));
+      }
+    }
+  }
+
+  let studioAttachmentRoot;
+  if (!hasAttachmentRoot) {
+    diagnostics.push(diagnostic(
+      filename,
+      'studioAttachmentRoot',
+      'Studio attachment destination is required when studio workspaces are configured',
+      'required',
+    ));
+  } else if (typeof config.studioAttachmentRoot === 'string' && path.isAbsolute(config.studioAttachmentRoot)) {
+    diagnostics.push(diagnostic(
+      filename,
+      'studioAttachmentRoot',
+      'Studio attachment destination must be relative to the Vault',
+      'absolute_path',
+    ));
+  } else if (normalizedVaultRoot) {
+    try {
+      studioAttachmentRoot = await resolveMissingContainedPath({
+        root: normalizedVaultRoot,
+        rawPath: config.studioAttachmentRoot,
+        label: 'Studio attachment destination',
+        allowRoot: false,
+      });
+    } catch (error) {
+      diagnostics.push(studioDiagnosticFromPathError(filename, 'studioAttachmentRoot', error));
+    }
+  }
+
+  return { studioWorkspaces, studioAttachmentRoot };
 }
 
 export class ConfigValidationError extends Error {
@@ -203,6 +341,13 @@ export async function validatePublishConfig(rawConfig, {
     ));
   }
 
+  const studioConfig = await validateStudioConfig({
+    config,
+    normalizedVaultRoot,
+    filename,
+    diagnostics,
+  });
+
   if (diagnostics.length > 0) throw new ConfigValidationError(diagnostics);
 
   return {
@@ -213,6 +358,7 @@ export async function validatePublishConfig(rawConfig, {
     attachmentRoots,
     ignoreFolders,
     includeInlineHashtags,
+    ...studioConfig,
   };
 }
 

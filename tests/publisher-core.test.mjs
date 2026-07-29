@@ -956,6 +956,14 @@ test('publisher package, ignore rules, and example config keep local publishing 
     entryOutputDir: 'src/content/entries',
     mediaOutputDir: 'public/media',
     attachmentRoots: ['Attachments'],
+    studioWorkspaces: [
+      {
+        id: 'research',
+        label: '产业研究',
+        path: 'Publishing/Research',
+      },
+    ],
+    studioAttachmentRoot: 'Attachments/Studio',
     ignoreFolders: ['.obsidian', '.trash', 'Templates'],
     includeInlineHashtags: true,
   });

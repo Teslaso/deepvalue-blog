@@ -162,15 +162,23 @@ function contextFor(prepared) {
 }
 
 async function cancelTransactionIfPossible(context) {
-  if (!CANCELABLE_TRANSACTION_STATES.has(context.transaction.status)) return;
+  if (!CANCELABLE_TRANSACTION_STATES.has(context.transaction.status)) return false;
   await context.dependencies.cancelPublicationTransaction(context.transaction);
+  return true;
 }
 
-function consume(context) {
+function beginConfirmation(context) {
   if (context.status !== 'prepared') {
     throw preparationError('Prepared publication has already been used', 'transaction_already_used');
   }
-  context.status = 'used';
+  context.status = 'confirming';
+}
+
+function beginCancellation(context) {
+  if (!['prepared', 'cleanup_required'].includes(context.status)) {
+    throw preparationError('Prepared publication has already been used', 'transaction_already_used');
+  }
+  context.status = 'canceling';
 }
 
 export async function prepareNotePublication(input = {}, overrides = {}) {
@@ -315,20 +323,24 @@ export async function confirmPreparedPublication(prepared, { push = true } = {})
   if (push && !context.allowPush) {
     throw preparationError('Push is disabled for this publication', 'push_not_allowed');
   }
-  consume(context);
+  beginConfirmation(context);
   try {
     const currentState = await context.stateStore.readState();
     await context.dependencies.applyPublicationTransaction(context.transaction, {
       state: currentState,
     });
-    return await context.dependencies.confirmPublicationTransaction(context.transaction, {
+    const result = await context.dependencies.confirmPublicationTransaction(context.transaction, {
       stateStore: context.stateStore,
       push,
     });
+    context.status = 'terminal';
+    return result;
   } catch (error) {
     try {
       await cancelTransactionIfPossible(context);
+      context.status = 'terminal';
     } catch (cleanupError) {
+      context.status = 'cleanup_required';
       context.dependencies.write(`Temporary transaction cleanup failed: ${cleanupError.message}`);
     }
     throw error;
@@ -337,6 +349,20 @@ export async function confirmPreparedPublication(prepared, { push = true } = {})
 
 export async function cancelPreparedPublication(prepared) {
   const context = contextFor(prepared);
-  consume(context);
-  return context.dependencies.cancelPublicationTransaction(context.transaction);
+  beginCancellation(context);
+  try {
+    const result = await context.dependencies.cancelPublicationTransaction(context.transaction);
+    context.status = 'terminal';
+    return result;
+  } catch (error) {
+    context.status = error?.code === 'invalid_transaction_state'
+      && !CANCELABLE_TRANSACTION_STATES.has(context.transaction.status)
+      ? 'terminal'
+      : 'cleanup_required';
+    throw error;
+  }
+}
+
+export function preparedPublicationNeedsCleanup(prepared) {
+  return contextFor(prepared).status === 'cleanup_required';
 }

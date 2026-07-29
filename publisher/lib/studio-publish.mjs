@@ -4,6 +4,7 @@ import {
   cancelPreparedPublication as defaultCancelPreparedPublication,
   confirmPreparedPublication as defaultConfirmPreparedPublication,
   prepareNotePublication as defaultPrepareNotePublication,
+  preparedPublicationNeedsCleanup as defaultPreparedPublicationNeedsCleanup,
 } from './publish-note.mjs';
 import { readStudioDocument as defaultReadStudioDocument } from './studio-document.mjs';
 
@@ -37,10 +38,47 @@ function expectedFingerprint(value) {
   return value;
 }
 
+function publicPublication(publication = {}) {
+  return {
+    publishId: publication.publishId,
+    ...(typeof publication.title === 'string' ? { title: publication.title } : {}),
+    ...(typeof publication.publishedAt === 'string' ? { publishedAt: publication.publishedAt } : {}),
+    ...(typeof publication.updatedAt === 'string' ? { updatedAt: publication.updatedAt } : {}),
+    entryTargetPath: publication.entryTargetPath,
+    assetTargetPaths: Array.isArray(publication.assetTargetPaths)
+      ? publication.assetTargetPaths.filter((value) => typeof value === 'string')
+      : [],
+  };
+}
+
+function publicManifestFile(file = {}) {
+  return {
+    kind: file.kind,
+    ...(typeof file.operation === 'string' ? { operation: file.operation } : {}),
+    publishId: file.publishId,
+    targetPath: file.targetPath,
+    ...(typeof file.beforeSha256 === 'string' ? { beforeSha256: file.beforeSha256 } : {}),
+    sha256: file.sha256,
+  };
+}
+
+function publicManifest(manifest = {}) {
+  return {
+    version: manifest.version,
+    transactionId: manifest.transactionId,
+    publications: Array.isArray(manifest.publications)
+      ? manifest.publications.map(publicPublication)
+      : [],
+    files: Array.isArray(manifest.files)
+      ? manifest.files.map(publicManifestFile)
+      : [],
+  };
+}
+
 function publicPrepared(prepared) {
   return {
     transactionId: prepared.transactionId,
-    manifest: prepared.manifest,
+    manifest: publicManifest(prepared.manifest),
     route: prepared.route,
     previewRoot: prepared.previewRoot,
     preparedAt: prepared.preparedAt,
@@ -56,23 +94,43 @@ export function createStudioPublisher({ config } = {}, overrides = {}) {
     prepareNotePublication: defaultPrepareNotePublication,
     confirmPreparedPublication: defaultConfirmPreparedPublication,
     cancelPreparedPublication: defaultCancelPreparedPublication,
+    preparedPublicationNeedsCleanup: defaultPreparedPublicationNeedsCleanup,
     ...overrides,
   };
   let active;
   let preparing = false;
-  const usedIds = new Set();
+  const seenIds = new Set();
 
-  function activeTransaction(transactionId) {
+  function activeTransaction(transactionId, operation) {
     if (typeof transactionId !== 'string' || transactionId === '') {
       throw studioError('transactionId is required', 'invalid_input');
     }
-    if (!active || active.prepared.transactionId !== transactionId) {
-      if (usedIds.has(transactionId)) {
+    if (active?.prepared.transactionId === transactionId) {
+      const allowed = operation === 'confirm'
+        ? active.phase === 'prepared'
+        : ['prepared', 'cleanup_required'].includes(active.phase);
+      if (!allowed) {
         throw studioError('Publication transaction has already been used', 'transaction_already_used');
       }
-      throw studioError('Prepared publication transaction was not found', 'transaction_not_found');
+      return active;
     }
-    return active;
+    if (seenIds.has(transactionId)) {
+      throw studioError('Publication transaction has already been used', 'transaction_already_used');
+    }
+    throw studioError('Prepared publication transaction was not found', 'transaction_not_found');
+  }
+
+  async function rejectPrepared(prepared, error) {
+    try {
+      await dependencies.cancelPreparedPublication(prepared);
+    } catch (cleanupError) {
+      throw studioError(
+        'Rejected publication staging could not be cleaned safely',
+        'transaction_rejected_cleanup_failed',
+        cleanupError,
+      );
+    }
+    throw error;
   }
 
   async function prepare(input = {}) {
@@ -96,8 +154,23 @@ export function createStudioPublisher({ config } = {}, overrides = {}) {
         sourcePath: path.join(workspace.path, ...relativePath.split('/')),
         expectedSourceHash: fingerprint,
       });
-      active = { prepared };
-      return publicPrepared(prepared);
+      const transactionId = prepared?.transactionId;
+      if (typeof transactionId !== 'string' || transactionId.trim() === '') {
+        return await rejectPrepared(
+          prepared,
+          studioError('Prepared publication returned an invalid transaction ID', 'invalid_transaction_id'),
+        );
+      }
+      if (seenIds.has(transactionId)) {
+        return await rejectPrepared(
+          prepared,
+          studioError('Prepared publication reused a historical transaction ID', 'transaction_id_collision'),
+        );
+      }
+      const exposed = publicPrepared(prepared);
+      seenIds.add(transactionId);
+      active = { prepared, phase: 'prepared' };
+      return exposed;
     } finally {
       preparing = false;
     }
@@ -105,17 +178,51 @@ export function createStudioPublisher({ config } = {}, overrides = {}) {
 
   async function confirm({ transactionId, push } = {}) {
     if (typeof push !== 'boolean') throw studioError('push must be a boolean', 'invalid_input');
-    const current = activeTransaction(transactionId);
-    active = undefined;
-    usedIds.add(transactionId);
-    return dependencies.confirmPreparedPublication(current.prepared, { push });
+    const current = activeTransaction(transactionId, 'confirm');
+    current.phase = 'confirming';
+    try {
+      const result = await dependencies.confirmPreparedPublication(current.prepared, { push });
+      active = undefined;
+      return result;
+    } catch (error) {
+      let cleanupRequired = true;
+      try {
+        cleanupRequired = dependencies.preparedPublicationNeedsCleanup(current.prepared);
+      } catch {
+        // An injected or interrupted confirmation cannot prove that staging is
+        // terminal, so retain the only cleanup handle and fail closed.
+      }
+      if (cleanupRequired) {
+        current.phase = 'cleanup_required';
+      } else {
+        active = undefined;
+      }
+      throw error;
+    }
   }
 
   async function cancel({ transactionId } = {}) {
-    const current = activeTransaction(transactionId);
-    active = undefined;
-    usedIds.add(transactionId);
-    return dependencies.cancelPreparedPublication(current.prepared);
+    const current = activeTransaction(transactionId, 'cancel');
+    current.phase = 'canceling';
+    try {
+      const result = await dependencies.cancelPreparedPublication(current.prepared);
+      active = undefined;
+      return result;
+    } catch (error) {
+      let cleanupRequired = true;
+      try {
+        cleanupRequired = dependencies.preparedPublicationNeedsCleanup(current.prepared);
+      } catch {
+        // Preserve an uncertain cleanup handle rather than permit overlapping
+        // repository transactions.
+      }
+      if (cleanupRequired) {
+        current.phase = 'cleanup_required';
+      } else {
+        active = undefined;
+      }
+      throw error;
+    }
   }
 
   return Object.freeze({ prepare, confirm, cancel });

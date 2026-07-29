@@ -405,6 +405,45 @@ test('preview failure cancels temporary staging before the categorized build err
   assert.equal(canceled, 1);
 });
 
+test('current-note workflow retries cleanup after a browser cancellation failure', async () => {
+  const prepared = {
+    transactionId: 'transaction-alpha',
+    manifest: previewManifest(),
+    route: '/blog/alpha/',
+    previewRoot: '/preview-repo/dist',
+    preparedAt: '2026-07-29T04:00:00.000Z',
+  };
+  const failure = new Error('browser cancellation cleanup failed');
+  let cancelCalls = 0;
+
+  await assert.rejects(
+    runPublishingWorkflow({
+      command: 'current',
+      source: path.resolve('/vault/Alpha.md'),
+      open: false,
+      yes: false,
+      push: true,
+    }, {
+      repoRoot: '/repo',
+      write: () => {},
+      loadConfig: async () => ({ repoRoot: '/repo' }),
+      prepareNotePublication: async () => prepared,
+      cancelPreparedPublication: async () => {
+        cancelCalls += 1;
+        if (cancelCalls === 1) throw failure;
+        return { canceled: true };
+      },
+      startPublisherServer: async ({ onCancel }) => ({
+        url: 'http://127.0.0.1:43123/blog/alpha/',
+        close: async () => {},
+        waitForResult: async () => onCancel(),
+      }),
+    }),
+    (error) => error === failure,
+  );
+  assert.equal(cancelCalls, 2);
+});
+
 test('CLI entrypoint never turns safe defaults into implicit confirmation and reports categorized failures', async () => {
   let received;
   const successCode = await runCli(['pending', '--no-open'], {

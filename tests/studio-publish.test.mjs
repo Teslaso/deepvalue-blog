@@ -180,6 +180,61 @@ test('prepared publication confirmation applies and confirms exactly once', asyn
   assert.equal(fixture.calls.filter(([name]) => name === 'confirm').length, 1);
 });
 
+test('prepared publication keeps cleanup retryable after cancellation fails', async () => {
+  const fixture = publicationDependencies();
+  let cancelCalls = 0;
+  fixture.dependencies.cancelPublicationTransaction = async (candidate) => {
+    cancelCalls += 1;
+    if (cancelCalls === 1) throw new Error('temporary cleanup failure');
+    candidate.status = 'canceled';
+    return { canceled: true };
+  };
+  const prepared = await prepareNotePublication({
+    config: config(),
+    sourcePath: '/vault/Publishing/Alpha.md',
+  }, fixture.dependencies);
+
+  await assert.rejects(
+    cancelPreparedPublication(prepared),
+    /temporary cleanup failure/u,
+  );
+  await assert.rejects(
+    confirmPreparedPublication(prepared, { push: false }),
+    (error) => error.code === 'transaction_already_used',
+  );
+  assert.deepEqual(
+    await cancelPreparedPublication(prepared),
+    { canceled: true },
+  );
+  assert.equal(cancelCalls, 2);
+});
+
+test('prepared publication marks an explicitly terminal cancellation failure as used', async () => {
+  const fixture = publicationDependencies();
+  let cancelCalls = 0;
+  fixture.dependencies.cancelPublicationTransaction = async () => {
+    cancelCalls += 1;
+    fixture.transaction.status = 'confirmed';
+    const error = new Error('transaction is already terminal');
+    error.code = 'invalid_transaction_state';
+    throw error;
+  };
+  const prepared = await prepareNotePublication({
+    config: config(),
+    sourcePath: '/vault/Publishing/Alpha.md',
+  }, fixture.dependencies);
+
+  await assert.rejects(
+    cancelPreparedPublication(prepared),
+    (error) => error.code === 'invalid_transaction_state',
+  );
+  await assert.rejects(
+    cancelPreparedPublication(prepared),
+    (error) => error.code === 'transaction_already_used',
+  );
+  assert.equal(cancelCalls, 1);
+});
+
 test('preparation cancels staging when isolated preview construction fails', async () => {
   const fixture = publicationDependencies();
   const failure = new Error('preview failed');
@@ -224,7 +279,14 @@ test('studio prepare requires a saved fingerprint and binds publication to those
       assert.equal(input.expectedSourceHash, FINGERPRINT);
       return {
         transactionId: 'transaction-alpha',
-        manifest: manifest(),
+        manifest: {
+          ...manifest(),
+          publications: [{
+            ...manifest().publications[0],
+            sourceHash: FINGERPRINT,
+            privatePublicationField: 'do-not-expose',
+          }],
+        },
         route: '/blog/alpha/',
         previewRoot: '/private/staging/preview-repo/dist',
         preparedAt: '2026-07-29T04:00:00.000Z',
@@ -263,6 +325,10 @@ test('studio prepare requires a saved fingerprint and binds publication to those
   ]);
   assert.equal(JSON.stringify(prepared).includes('/vault/'), false);
   assert.equal(JSON.stringify(prepared).includes('Alpha body'), false);
+  assert.equal(prepared.manifest.publications[0].sourcePath, undefined);
+  assert.equal(prepared.manifest.publications[0].sourceHash, undefined);
+  assert.equal(prepared.manifest.publications[0].privatePublicationField, undefined);
+  assert.equal(prepared.manifest.publications[0].publishId, 'alpha');
 });
 
 test('studio publisher permits only one prepared transaction and rejects a wrong ID', async () => {
@@ -355,9 +421,156 @@ test('studio confirm consumes its ID before awaiting and cannot invoke confirmat
     publisher.confirm({ transactionId: 'transaction-alpha', push: true }),
     (error) => error.code === 'transaction_already_used',
   );
+  await assert.rejects(
+    publisher.prepare({
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      expectedFingerprint: FINGERPRINT,
+    }),
+    (error) => error.code === 'transaction_active',
+  );
   releaseConfirm();
   assert.deepEqual(await first, { commitSha: 'deadbeef', pushed: true });
   assert.equal(confirmCalls, 1);
+});
+
+test('studio preserves the original confirmation failure and keeps uncertain cleanup locked', async () => {
+  const failure = new Error('confirmation failed');
+  const publisher = createStudioPublisher({ config: config() }, {
+    readStudioDocument: async () => ({
+      relativePath: 'Alpha.md',
+      fingerprint: FINGERPRINT,
+    }),
+    prepareNotePublication: async () => ({
+      transactionId: 'transaction-alpha',
+      manifest: manifest(),
+      route: '/blog/alpha/',
+      previewRoot: '/private/staging/preview-repo/dist',
+      preparedAt: '2026-07-29T04:00:00.000Z',
+    }),
+    confirmPreparedPublication: async () => {
+      throw failure;
+    },
+    cancelPreparedPublication: async () => ({ canceled: true }),
+  });
+  const input = {
+    workspaceId: 'research',
+    relativePath: 'Alpha.md',
+    expectedFingerprint: FINGERPRINT,
+  };
+  await publisher.prepare(input);
+
+  await assert.rejects(
+    publisher.confirm({ transactionId: 'transaction-alpha', push: false }),
+    (error) => error === failure,
+  );
+  await assert.rejects(
+    publisher.prepare(input),
+    (error) => error.code === 'transaction_active',
+  );
+  assert.deepEqual(
+    await publisher.cancel({ transactionId: 'transaction-alpha' }),
+    { canceled: true },
+  );
+});
+
+test('studio cancel retains its lock in flight and retries cleanup after failure', async () => {
+  let cancelCalls = 0;
+  let releaseFirstCancel;
+  const publisher = createStudioPublisher({ config: config() }, {
+    readStudioDocument: async () => ({
+      relativePath: 'Alpha.md',
+      fingerprint: FINGERPRINT,
+    }),
+    prepareNotePublication: async () => ({
+      transactionId: 'transaction-alpha',
+      manifest: manifest(),
+      route: '/blog/alpha/',
+      previewRoot: '/private/staging/preview-repo/dist',
+      preparedAt: '2026-07-29T04:00:00.000Z',
+    }),
+    cancelPreparedPublication: async () => {
+      cancelCalls += 1;
+      if (cancelCalls === 1) {
+        await new Promise((resolve) => { releaseFirstCancel = resolve; });
+        throw new Error('temporary cleanup failure');
+      }
+      return { canceled: true };
+    },
+  });
+  const input = {
+    workspaceId: 'research',
+    relativePath: 'Alpha.md',
+    expectedFingerprint: FINGERPRINT,
+  };
+  await publisher.prepare(input);
+
+  const firstCancel = publisher.cancel({ transactionId: 'transaction-alpha' });
+  await assert.rejects(
+    publisher.prepare(input),
+    (error) => error.code === 'transaction_active',
+  );
+  await assert.rejects(
+    publisher.cancel({ transactionId: 'transaction-alpha' }),
+    (error) => error.code === 'transaction_already_used',
+  );
+  releaseFirstCancel();
+  await assert.rejects(firstCancel, /temporary cleanup failure/u);
+  await assert.rejects(
+    publisher.confirm({ transactionId: 'transaction-alpha', push: false }),
+    (error) => error.code === 'transaction_already_used',
+  );
+  assert.deepEqual(
+    await publisher.cancel({ transactionId: 'transaction-alpha' }),
+    { canceled: true },
+  );
+  assert.equal(cancelCalls, 2);
+});
+
+test('studio rejects reused or invalid prepared transaction IDs and cleans collision staging', async () => {
+  let prepareCalls = 0;
+  const canceled = [];
+  const publisher = createStudioPublisher({ config: config() }, {
+    readStudioDocument: async () => ({
+      relativePath: 'Alpha.md',
+      fingerprint: FINGERPRINT,
+    }),
+    prepareNotePublication: async () => {
+      prepareCalls += 1;
+      return {
+        transactionId: prepareCalls === 3 ? '' : 'transaction-alpha',
+        manifest: manifest(),
+        route: '/blog/alpha/',
+        previewRoot: `/private/staging/preview-${prepareCalls}/dist`,
+        preparedAt: '2026-07-29T04:00:00.000Z',
+      };
+    },
+    cancelPreparedPublication: async (prepared) => {
+      canceled.push(prepared.previewRoot);
+      return { canceled: true };
+    },
+  });
+  const input = {
+    workspaceId: 'research',
+    relativePath: 'Alpha.md',
+    expectedFingerprint: FINGERPRINT,
+  };
+
+  const first = await publisher.prepare(input);
+  await publisher.cancel({ transactionId: first.transactionId });
+  await assert.rejects(
+    publisher.prepare(input),
+    (error) => error.code === 'transaction_id_collision',
+  );
+  await assert.rejects(
+    publisher.prepare(input),
+    (error) => error.code === 'invalid_transaction_id',
+  );
+  assert.deepEqual(canceled, [
+    '/private/staging/preview-1/dist',
+    '/private/staging/preview-2/dist',
+    '/private/staging/preview-3/dist',
+  ]);
 });
 
 test('studio cancel consumes its ID and invokes prepared staging cleanup once', async () => {

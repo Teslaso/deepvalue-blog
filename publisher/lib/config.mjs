@@ -87,6 +87,19 @@ function studioDiagnosticFromPathError(filename, field, error) {
   return diagnostic(filename, field, error.message, error.code ?? 'path_error');
 }
 
+async function studioDirectoryDiagnostic({ filename, field, label, resolvedPath, allowMissing = false }) {
+  try {
+    const pathStats = await stat(resolvedPath);
+    if (!pathStats.isDirectory()) {
+      return diagnostic(filename, field, `${label} must be a directory`, 'invalid_directory');
+    }
+  } catch (error) {
+    if (allowMissing && error?.code === 'ENOENT') return undefined;
+    return diagnostic(filename, field, `${label} could not be inspected: ${error.message}`, 'path_error');
+  }
+  return undefined;
+}
+
 async function validateStudioConfig({ config, normalizedVaultRoot, filename, diagnostics }) {
   const hasWorkspaces = config.studioWorkspaces !== undefined;
   const hasAttachmentRoot = config.studioAttachmentRoot !== undefined;
@@ -168,6 +181,16 @@ async function validateStudioConfig({ config, normalizedVaultRoot, filename, dia
           label: 'Studio workspace path',
           allowRoot: false,
         });
+        const directoryError = await studioDirectoryDiagnostic({
+          filename,
+          field: pathField,
+          label: 'Studio workspace path',
+          resolvedPath,
+        });
+        if (directoryError) {
+          diagnostics.push(directoryError);
+          continue;
+        }
         if (
           typeof workspace.id === 'string'
           && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(workspace.id)
@@ -209,6 +232,14 @@ async function validateStudioConfig({ config, normalizedVaultRoot, filename, dia
         label: 'Studio attachment destination',
         allowRoot: false,
       });
+      const directoryError = await studioDirectoryDiagnostic({
+        filename,
+        field: 'studioAttachmentRoot',
+        label: 'Studio attachment destination',
+        resolvedPath: studioAttachmentRoot,
+        allowMissing: true,
+      });
+      if (directoryError) diagnostics.push(directoryError);
     } catch (error) {
       diagnostics.push(studioDiagnosticFromPathError(filename, 'studioAttachmentRoot', error));
     }

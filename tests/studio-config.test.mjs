@@ -6,6 +6,7 @@ import {
   realpath,
   rm,
   symlink,
+  writeFile,
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -141,6 +142,62 @@ test('validatePublishConfig rejects studio traversal, absolute paths, and symlin
         assert.equal(error instanceof ConfigValidationError, true);
         assert.equal(error.diagnostics.filter(({ code }) => code === 'path_escape').length, 3);
         assert.equal(error.diagnostics.filter(({ code }) => code === 'absolute_path').length, 1);
+        return true;
+      },
+    );
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('validatePublishConfig rejects a regular file as a studio workspace', async () => {
+  const fixture = await createFixture();
+
+  try {
+    await writeFile(path.join(fixture.vaultRoot, 'Publishing/Workspace.md'), '# Not a directory\n');
+
+    await assert.rejects(
+      validatePublishConfig({
+        ...validConfig(fixture.vaultRoot),
+        studioWorkspaces: [
+          { id: 'research', label: '产业研究', path: 'Publishing/Workspace.md' },
+        ],
+        studioAttachmentRoot: 'Attachments/Studio',
+      }, { repoRoot: fixture.repoRoot }),
+      (error) => {
+        assert.equal(error instanceof ConfigValidationError, true);
+        assert.deepEqual(
+          error.diagnostics.map(({ field, code }) => ({ field, code })),
+          [{ field: 'studioWorkspaces[0].path', code: 'invalid_directory' }],
+        );
+        return true;
+      },
+    );
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('validatePublishConfig rejects a regular file as the studio attachment destination', async () => {
+  const fixture = await createFixture();
+
+  try {
+    await writeFile(path.join(fixture.vaultRoot, 'Attachments/Studio'), 'not a directory\n');
+
+    await assert.rejects(
+      validatePublishConfig({
+        ...validConfig(fixture.vaultRoot),
+        studioWorkspaces: [
+          { id: 'research', label: '产业研究', path: 'Publishing/Research' },
+        ],
+        studioAttachmentRoot: 'Attachments/Studio',
+      }, { repoRoot: fixture.repoRoot }),
+      (error) => {
+        assert.equal(error instanceof ConfigValidationError, true);
+        assert.deepEqual(
+          error.diagnostics.map(({ field, code }) => ({ field, code })),
+          [{ field: 'studioAttachmentRoot', code: 'invalid_directory' }],
+        );
         return true;
       },
     );

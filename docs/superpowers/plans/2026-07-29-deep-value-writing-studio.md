@@ -15,11 +15,12 @@
 - Only configured publishing workspaces and the configured attachment destination are readable or writable.
 - The entire Vault is never indexed or exposed.
 - Every write uses an atomic same-directory replacement and external-change conflict detection.
+- Conflict detection protects ordinary concurrent Obsidian/Finder edits; it does not claim inode-conditional safety against a malicious same-account process that wins the final syscall race.
 - Publication remains two-stage: prepare and inspect, then explicit confirm-and-push or confirm-local.
 - Existing `publish:current` and `publish:pending` CLI behavior remains unchanged.
 - The studio API and assets must never appear in the production Astro output.
 - `publish_id` is stable after first assignment and is never regenerated from a changed title.
-- No AI writing, cloud sync, collaboration, delete-file action, or desktop wrapper is included.
+- No AI writing, cloud sync, collaboration, rename/delete-file action, or desktop wrapper is included.
 - Do not stage or commit `.DS_Store`, `.claude/settings.local.json`, `handoff/`, `.superpowers/`, `publish.config.local.json`, or runtime studio data.
 
 ---
@@ -32,7 +33,7 @@
 - Modify `publisher/lib/config.mjs` — validate and resolve studio paths inside the Vault.
 - Create `publisher/lib/studio-paths.mjs` — reusable lexical and physical containment checks.
 - Create `publisher/lib/studio-workspace.mjs` — scan allowed Markdown files and derive editor status.
-- Create `publisher/lib/studio-document.mjs` — read, create, rename, and atomically save notes with conflict detection.
+- Create `publisher/lib/studio-document.mjs` — read, create, and atomically save notes with conflict detection.
 - Create `publisher/lib/studio-frontmatter.mjs` — preserve unknown YAML fields while applying structured form changes.
 - Create `publisher/lib/studio-attachments.mjs` — validate and write pasted image bytes.
 
@@ -298,7 +299,6 @@ git commit -m "feat: add studio frontmatter adapter"
   - `readStudioDocument(config, { workspaceId, relativePath }): Promise<StudioDocument>`
   - `createStudioDocument(config, input): Promise<StudioDocument>`
   - `saveStudioDocument(config, input): Promise<StudioDocument>`
-  - `renameStudioDocument(config, input): Promise<StudioDocument>`
 
 `StudioDocument` must contain:
 
@@ -379,7 +379,13 @@ Fingerprint exact UTF-8 source bytes with SHA-256. Save by:
 6. removing the temporary sibling on failure.
 
 New documents must use a safe filename derived from the user title and add a
-numeric suffix on collision. Renames stay in the same configured workspace.
+numeric suffix on collision. First-version APIs do not rename or delete files.
+
+Conflict detection must compare the expected fingerprint immediately before
+the atomic same-directory replacement and serialize saves for one document.
+This protects ordinary concurrent editor saves. The accepted local threat model
+does not require an inode-conditional replace primitive that Node does not
+expose against a malicious same-account process racing the final syscall.
 
 - [ ] **Step 6: Run focused tests**
 
@@ -626,7 +632,6 @@ GET  /_studio/api/document?workspaceId=&path=
 POST /_studio/api/document
 PUT  /_studio/api/document
 PUT  /_studio/api/document/resolve-conflict
-POST /_studio/api/document/rename
 POST /_studio/api/attachment
 POST /_studio/api/preview
 POST /_studio/api/publish/prepare
@@ -871,7 +876,7 @@ Provide:
 
 - workspace and status filters;
 - filename/title/tag search;
-- create and rename, but no delete;
+- create, but no rename or delete;
 - collapsible metadata panel;
 - structured fields from `publicationFormSchema()`;
 - explicit unlock confirmation before changing an existing `publish_id`;
@@ -1094,7 +1099,7 @@ Verify at desktop 1440×900 and mobile 390×844:
 - mobile tabs;
 - no page overflow;
 - keyboard navigation and visible focus;
-- new/open/save/rename;
+- new/open/save;
 - metadata collapse and validation;
 - Markdown shortcuts;
 - paste/drop image;

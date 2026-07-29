@@ -87,7 +87,7 @@
   - `resolveExistingContainedPath({ root, rawPath, label, allowRoot? }): Promise<string>`
   - `resolveMissingContainedPath({ root, rawPath, label, allowRoot? }): Promise<string>`
   - `config.studioWorkspaces: Array<{ id: string, label: string, path: string }>`
-  - `config.studioAttachmentRoot: string`
+  - `config.studioAttachmentRoot?: string`
 
 - [ ] **Step 1: Write failing configuration and path-containment tests**
 
@@ -137,7 +137,11 @@ Expected: FAIL because studio configuration fields and path helpers do not exist
 Use physical `realpath` checks for existing workspaces. Allow the attachment leaf
 to be absent only when its closest existing parent remains physically inside the
 Vault. Validate workspace IDs with `/^[a-z0-9]+(?:-[a-z0-9]+)*$/`, require unique
-IDs, non-empty labels, and at least one workspace.
+IDs and non-empty labels. For backward compatibility, a Publisher configuration
+that omits both Studio fields returns `studioWorkspaces: []` and
+`studioAttachmentRoot: undefined`; `publisher/studio.mjs` rejects that empty
+configuration with an actionable startup diagnostic. Existing
+`publish:current` and `publish:pending` commands continue to accept old configs.
 
 The returned shape must be:
 
@@ -461,7 +465,7 @@ git commit -m "feat: ingest studio attachments safely"
 Run:
 
 ```bash
-npm install marked@18.0.7 sanitize-html@2.17.6
+npm install marked@18.0.7 marked-footnote@1.4.0 sanitize-html@2.17.6
 ```
 
 Expected: `package.json` and lockfile contain exact compatible dependency ranges.
@@ -489,10 +493,12 @@ Expected: FAIL because the renderer is missing.
 
 - [ ] **Step 4: Implement renderer**
 
-Transform Obsidian callouts, wiki links, and embeds before passing Markdown to
-`marked`. Sanitize using an explicit allowlist for the elements and attributes
-already supported by the blog. Never allow `style`, event attributes, `iframe`,
-`object`, `svg`, or active URL schemes.
+Register the `marked-footnote` extension, then transform Obsidian callouts, wiki
+links, and embeds before passing Markdown to `marked`. Sanitize using an explicit
+allowlist for the elements and attributes already supported by the blog,
+including the generated footnote section, backlinks, and stable footnote IDs.
+Never allow `style`, event attributes, `iframe`, `object`, `svg`, or active URL
+schemes.
 
 Generate deterministic heading IDs and return:
 
@@ -619,6 +625,7 @@ GET  /_studio/api/workspaces
 GET  /_studio/api/document?workspaceId=&path=
 POST /_studio/api/document
 PUT  /_studio/api/document
+PUT  /_studio/api/document/resolve-conflict
 POST /_studio/api/document/rename
 POST /_studio/api/attachment
 POST /_studio/api/preview
@@ -948,10 +955,11 @@ Expected: FAIL on missing states.
 
 - [ ] **Step 4: Implement conflict resolution**
 
-“保留网页版本” must call a separate force-save endpoint with both the stale and
-current disk fingerprints and require a confirm dialog. The server performs one
-last comparison before overwrite; it never accepts a boolean `force: true`
-without both fingerprints.
+“保留网页版本” must call
+`PUT /_studio/api/document/resolve-conflict` with both the stale and current
+disk fingerprints and require a confirm dialog. The server performs one last
+comparison before overwrite; it never accepts a boolean `force: true` without
+both fingerprints.
 
 - [ ] **Step 5: Implement final publish review**
 

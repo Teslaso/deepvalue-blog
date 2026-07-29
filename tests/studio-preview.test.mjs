@@ -235,6 +235,31 @@ test('clears list state after leaving a blockquote scope before evaluating new q
   assert.match(preview.html, /\[\[Quoted code\]\]/);
 });
 
+test('clears quote list state before a top-level fenced block in preview and footnote reservation', async () => {
+  const calls = [];
+  const preview = await renderStudioPreview({
+    body: [
+      '> - parent',
+      '```md',
+      'fence boundary',
+      '```',
+      '>     - [[Quoted code]]',
+      '>     [^fake]: only code',
+      '',
+      '# Footnote fake',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: target };
+    },
+  });
+
+  assert.deepEqual(calls, []);
+  assert.match(preview.html, /\[\[Quoted code\]\]/);
+  assert.match(preview.html, /<h1 id="footnote-fake">Footnote fake<\/h1>/);
+});
+
 test('removes active raw HTML, event handlers, and unsafe URL schemes', async () => {
   const preview = await renderStudioPreview({
     body: [

@@ -150,6 +150,10 @@ function clearExitedQuoteScopes(blockState, depth) {
   }
 }
 
+function synchronizeBlockState(blockState, line) {
+  clearExitedQuoteScopes(blockState, lineBlockInfo(line).depth);
+}
+
 function isIndentedCodeLine(line, blockState) {
   const info = lineBlockInfo(line);
   clearExitedQuoteScopes(blockState, info.depth);
@@ -304,6 +308,7 @@ async function preprocessMarkdown(body, context) {
   for (let index = 0; index < lines.length; index += 2) {
     const line = lines[index];
     const ending = lines[index + 1] ?? '';
+    synchronizeBlockState(blockState, line);
     if (openFence) {
       output += line + ending;
       if (closesFence(line, openFence)) openFence = undefined;
@@ -356,6 +361,7 @@ function collectReservedFootnoteIds(markdown) {
   for (let index = 0; index < source.length; index += 2) {
     const line = source[index];
     const ending = source[index + 1] ?? '';
+    synchronizeBlockState(blockState, line);
     if (openFence) {
       if (closesFence(line, openFence)) openFence = undefined;
       visibleMarkdown += ending;

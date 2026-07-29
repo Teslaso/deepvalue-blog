@@ -197,6 +197,44 @@ test('resolves nested unordered and ordered list wiki links instead of treating 
   assert.match(preview.html, /Nested ordered resolved/);
 });
 
+test('resolves nested lists below legal empty parent list markers', async () => {
+  const calls = [];
+  await renderStudioPreview({
+    body: [
+      '-',
+      '    - [[Nested child]]',
+      '1.',
+      '    1. [[Nested ordered]]',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: target };
+    },
+  });
+
+  assert.deepEqual(calls, ['Nested child', 'Nested ordered']);
+});
+
+test('clears list state after leaving a blockquote scope before evaluating new quoted indentation', async () => {
+  const calls = [];
+  const preview = await renderStudioPreview({
+    body: [
+      '> - parent',
+      '',
+      '>     - [[Quoted code]]',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: target };
+    },
+  });
+
+  assert.deepEqual(calls, []);
+  assert.match(preview.html, /\[\[Quoted code\]\]/);
+});
+
 test('removes active raw HTML, event handlers, and unsafe URL schemes', async () => {
   const preview = await renderStudioPreview({
     body: [

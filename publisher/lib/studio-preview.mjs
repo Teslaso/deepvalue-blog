@@ -131,7 +131,7 @@ function indentationInfo(content) {
     columns += content[index] === '\t' ? 4 - (columns % 4) : 1;
     index += 1;
   }
-  const marker = /^(?:[-+*]|\d+[.)])[ \t]+/u.test(content.slice(index));
+  const marker = /^(?:[-+*]|\d+[.)])(?:[ \t]+|$)/u.test(content.slice(index));
   return { columns, index, marker };
 }
 
@@ -144,8 +144,15 @@ function createBlockState() {
   return { listIndentsByQuoteDepth: new Map() };
 }
 
+function clearExitedQuoteScopes(blockState, depth) {
+  for (const quoteDepth of blockState.listIndentsByQuoteDepth.keys()) {
+    if (quoteDepth > depth) blockState.listIndentsByQuoteDepth.delete(quoteDepth);
+  }
+}
+
 function isIndentedCodeLine(line, blockState) {
   const info = lineBlockInfo(line);
+  clearExitedQuoteScopes(blockState, info.depth);
   if (info.columns < 4) return false;
   const parentIndents = blockState.listIndentsByQuoteDepth.get(info.depth) ?? [];
   return !(info.marker && parentIndents.some((indent) => indent < info.columns));
@@ -153,6 +160,7 @@ function isIndentedCodeLine(line, blockState) {
 
 function observeBlockLine(line, blockState) {
   const { content, depth, columns, marker } = lineBlockInfo(line);
+  clearExitedQuoteScopes(blockState, depth);
   if (marker) {
     const existing = blockState.listIndentsByQuoteDepth.get(depth) ?? [];
     blockState.listIndentsByQuoteDepth.set(depth, [

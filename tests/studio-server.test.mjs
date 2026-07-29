@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { request as httpRequest } from 'node:http';
+import { connect as netConnect } from 'node:net';
 import {
   mkdir,
   mkdtemp,
@@ -11,6 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { PublicationPreparationError } from '../publisher/lib/publish-note.mjs';
 import { runStudio } from '../publisher/studio.mjs';
 import { startStudioServer } from '../publisher/studio-server.mjs';
 
@@ -205,6 +208,25 @@ function rawRequest(url, {
   });
 }
 
+function rawSocketRequest(url, requestText) {
+  const target = new URL(url);
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const socket = netConnect({
+      host: target.hostname,
+      port: Number(target.port),
+    });
+    socket.once('connect', () => socket.end(requestText));
+    socket.on('data', (chunk) => chunks.push(chunk));
+    socket.once('end', () => {
+      const response = Buffer.concat(chunks).toString('utf8');
+      const status = Number(response.match(/^HTTP\/1\.1 (\d{3})/u)?.[1]);
+      resolve({ status, body: response.split('\r\n\r\n', 2)[1] ?? '' });
+    });
+    socket.once('error', reject);
+  });
+}
+
 function apiHeaders(token, extra = {}) {
   return { 'x-studio-token': token, ...extra };
 }
@@ -258,6 +280,27 @@ test('strict Host validation rejects DNS rebinding, localhost, IPv6, and forged 
     assert.equal(response.status, 421, host);
     assert.doesNotMatch(response.body, new RegExp(state.token, 'u'));
     assert.doesNotMatch(response.body, /Public body|private\/vault/u);
+  }
+});
+
+test('strict Host validation rejects duplicate Host fields regardless of header-name casing', async (t) => {
+  const { studio, state } = await startFixture(t);
+  const authority = new URL(studio.url).host;
+
+  for (const secondHost of [authority, 'attacker.example']) {
+    const response = await rawSocketRequest(
+      studio.url,
+      [
+        'GET /_studio/ HTTP/1.1',
+        `Host: ${authority}`,
+        `hOsT: ${secondHost}`,
+        'Connection: close',
+        '',
+        '',
+      ].join('\r\n'),
+    );
+    assert.equal(response.status, 421);
+    assert.doesNotMatch(response.body, new RegExp(state.token, 'u'));
   }
 });
 
@@ -615,6 +658,33 @@ test('API errors map to stable statuses without leaking note bodies, physical pa
   }
 });
 
+test('a real preparation external-change error remains a recoverable 409 conflict', async (t) => {
+  const secret = '/private/vault/Research/Alpha.md changed';
+  const { studio, state } = await startFixture(t, {
+    moduleOverrides: {
+      createStudioPublisher: () => ({
+        prepare: async () => {
+          throw new PublicationPreparationError(secret, 'external_change');
+        },
+        confirm: async () => assert.fail('not used'),
+        cancel: async () => assert.fail('not used'),
+      }),
+    },
+  });
+
+  const response = await apiJson(studio, state.token, '/_studio/api/publish/prepare', {
+    method: 'POST',
+    body: {
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      expectedFingerprint: FINGERPRINT_A,
+    },
+  });
+  assert.equal(response.response.status, 409);
+  assert.equal(response.json.error.code, 'external_change');
+  assert.doesNotMatch(JSON.stringify(response.json), /private\/vault|Alpha\.md/u);
+});
+
 test('replayed publication transaction errors return 409 and do not use the Studio session token as an ID', async (t) => {
   const calls = [];
   const { studio, state } = await startFixture(t, {
@@ -645,7 +715,13 @@ test('runStudio loads config, builds disposable assets, honors --no-open, prints
     repoRoot: '/repo',
     loadPublishConfig: async (input) => {
       calls.push(['config', input]);
-      return { studioWorkspaces: [] };
+      return {
+        studioWorkspaces: [{
+          id: 'research',
+          label: '产业研究',
+          path: '/private/vault/Research',
+        }],
+      };
     },
     buildStudioAssets: async () => {
       calls.push(['build']);
@@ -675,4 +751,182 @@ test('runStudio loads config, builds disposable assets, honors --no-open, prints
   assert.equal(calls[2][1].openBrowser, undefined);
   assert.match(calls.find(([name]) => name === 'write')[1], /http:\/\/127\.0\.0\.1:43123\/_studio\//u);
   assert.deepEqual(calls.slice(-2), [['close'], ['cleanup']]);
+});
+
+test('runStudio rejects an empty workspace config before building assets or starting a server', async () => {
+  const calls = [];
+  await assert.rejects(
+    runStudio(['--no-open'], {
+      repoRoot: '/repo',
+      loadPublishConfig: async () => {
+        calls.push('config');
+        return {
+          vaultRoot: '/private/vault',
+          studioWorkspaces: [],
+        };
+      },
+      buildStudioAssets: async () => {
+        calls.push('build');
+        assert.fail('empty Studio config must fail before building assets');
+      },
+      startStudioServer: async () => {
+        calls.push('server');
+        assert.fail('empty Studio config must fail before server startup');
+      },
+      processSignals: false,
+    }),
+    (error) => {
+      assert.equal(error.code, 'studio_workspaces_required');
+      assert.match(error.message, /studioWorkspaces/u);
+      assert.doesNotMatch(error.message, /private\/vault/u);
+      return true;
+    },
+  );
+  assert.deepEqual(calls, ['config']);
+});
+
+test('server close retains an active transaction and retries cleanup after a temporary failure', async (t) => {
+  const previewRoot = await makePreviewRoot(t);
+  const cancelIds = [];
+  const failure = new Error('temporary publication cleanup failure');
+  const { studio, state } = await startFixture(t, {
+    previewRoot,
+    moduleOverrides: {
+      createStudioPublisher: () => ({
+        prepare: async () => ({
+          transactionId: 'transaction-alpha',
+          route: '/blog/alpha/',
+          manifest: {
+            version: 1,
+            transactionId: 'transaction-alpha',
+            publications: [],
+            files: [],
+          },
+          previewRoot,
+          preparedAt: '2026-07-29T04:00:00.000Z',
+        }),
+        confirm: async () => assert.fail('not used'),
+        cancel: async ({ transactionId }) => {
+          cancelIds.push(transactionId);
+          if (cancelIds.length === 1) throw failure;
+          return { canceled: true };
+        },
+      }),
+    },
+  });
+  const prepared = await apiJson(studio, state.token, '/_studio/api/publish/prepare', {
+    method: 'POST',
+    body: {
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      expectedFingerprint: FINGERPRINT_A,
+    },
+  });
+  assert.equal(prepared.response.status, 200);
+
+  await assert.rejects(studio.close(), (error) => error === failure);
+  assert.deepEqual(cancelIds, ['transaction-alpha']);
+  assert.deepEqual(await studio.close(), { closed: true });
+  assert.deepEqual(cancelIds, ['transaction-alpha', 'transaction-alpha']);
+});
+
+test('runStudio always cleans temporary assets and preserves the original close failure', async () => {
+  const calls = [];
+  const closeFailure = new Error('close failed');
+  const cleanupFailure = new Error('asset cleanup failed');
+
+  await assert.rejects(
+    runStudio(['--no-open'], {
+      loadPublishConfig: async () => ({
+        studioWorkspaces: [{ id: 'research', label: '产业研究', path: '/vault/Research' }],
+      }),
+      buildStudioAssets: async () => ({
+        publicRoot: '/temporary/studio-assets',
+        cleanup: async () => {
+          calls.push('cleanup');
+          throw cleanupFailure;
+        },
+      }),
+      startStudioServer: async () => ({
+        url: 'http://127.0.0.1:43123/_studio/',
+        result: Promise.resolve({ closed: true }),
+        close: async () => {
+          calls.push('close');
+          throw closeFailure;
+        },
+      }),
+      write: () => {},
+      processSignals: false,
+    }),
+    (error) => error === closeFailure,
+  );
+  assert.deepEqual(calls, ['close', 'cleanup']);
+});
+
+test('runStudio throws an asset cleanup failure when shutdown otherwise succeeds', async () => {
+  const cleanupFailure = new Error('asset cleanup failed');
+  await assert.rejects(
+    runStudio(['--no-open'], {
+      loadPublishConfig: async () => ({
+        studioWorkspaces: [{ id: 'research', label: '产业研究', path: '/vault/Research' }],
+      }),
+      buildStudioAssets: async () => ({
+        publicRoot: '/temporary/studio-assets',
+        cleanup: async () => {
+          throw cleanupFailure;
+        },
+      }),
+      startStudioServer: async () => ({
+        url: 'http://127.0.0.1:43123/_studio/',
+        result: Promise.resolve({ closed: true }),
+        close: async () => ({ closed: true }),
+      }),
+      write: () => {},
+      processSignals: false,
+    }),
+    (error) => error === cleanupFailure,
+  );
+});
+
+test('SIGTERM follows retryable close and asset cleanup without replacing the first close error', async () => {
+  const signals = new EventEmitter();
+  const closeFailure = new Error('signal close failed');
+  const calls = [];
+  let rejectResult;
+  const result = new Promise((_resolve, reject) => {
+    rejectResult = reject;
+  });
+
+  await assert.rejects(
+    runStudio(['--no-open'], {
+      loadPublishConfig: async () => ({
+        studioWorkspaces: [{ id: 'research', label: '产业研究', path: '/vault/Research' }],
+      }),
+      buildStudioAssets: async () => ({
+        publicRoot: '/temporary/studio-assets',
+        cleanup: async () => calls.push('cleanup'),
+      }),
+      startStudioServer: async () => {
+        setImmediate(() => signals.emit('SIGTERM'));
+        return {
+          url: 'http://127.0.0.1:43123/_studio/',
+          result,
+          close: async () => {
+            calls.push('close');
+            if (calls.filter((entry) => entry === 'close').length === 1) {
+              rejectResult(closeFailure);
+              throw closeFailure;
+            }
+            return { closed: true };
+          },
+        };
+      },
+      write: () => {},
+      signalProcess: signals,
+      processSignals: true,
+    }),
+    (error) => error === closeFailure,
+  );
+  assert.deepEqual(calls, ['close', 'close', 'cleanup']);
+  assert.equal(signals.listenerCount('SIGTERM'), 0);
 });

@@ -388,6 +388,24 @@ function publicError(error) {
   }
 
   const code = typeof error?.code === 'string' ? error.code : '';
+  if ([
+    'destination_conflict',
+    'destination_exists',
+    'external_change',
+    'publish_id_locked',
+    'repository_changed',
+    'target_changed',
+    'target_conflict',
+    'transaction_active',
+    'transaction_already_used',
+    'transaction_id_collision',
+  ].includes(code)) {
+    return {
+      status: 409,
+      body: { error: { code: code || 'conflict', message: 'Conflict' } },
+    };
+  }
+
   const validationNames = new Set([
     'FrontmatterParseError',
     'PublicationPreparationError',
@@ -412,23 +430,6 @@ function publicError(error) {
     return {
       status: 404,
       body: { error: { code: 'not_found', message: 'Not found' } },
-    };
-  }
-  if ([
-    'destination_conflict',
-    'destination_exists',
-    'external_change',
-    'publish_id_locked',
-    'repository_changed',
-    'target_changed',
-    'target_conflict',
-    'transaction_active',
-    'transaction_already_used',
-    'transaction_id_collision',
-  ].includes(code)) {
-    return {
-      status: 409,
-      body: { error: { code: code || 'conflict', message: 'Conflict' } },
     };
   }
   if (code === 'attachment_too_large') {
@@ -693,7 +694,13 @@ export async function startStudioServer({
 
   const server = createServer(async (request, response) => {
     try {
-      if (request.headers.host !== allowedHost) {
+      const hostValues = [];
+      for (let index = 0; index < request.rawHeaders.length; index += 2) {
+        if (request.rawHeaders[index].toLowerCase() === 'host') {
+          hostValues.push(request.rawHeaders[index + 1]);
+        }
+      }
+      if (hostValues.length !== 1 || hostValues[0] !== allowedHost) {
         plainResponse(response, 421, 'Misdirected Request');
         return;
       }
@@ -796,27 +803,39 @@ export async function startStudioServer({
 
   async function close() {
     if (closingPromise) return closingPromise;
-    closingPromise = (async () => {
+    const attempt = (async () => {
       let cleanupError;
       const current = previewState;
-      previewState = undefined;
       if (current) {
         try {
           await publisher.cancel({ transactionId: current.transactionId });
+          if (previewState === current) previewState = undefined;
         } catch (error) {
           cleanupError = error;
         }
       }
-      await closeHttpServer(server);
-      if (cleanupError) {
-        rejectResult(cleanupError);
-        throw cleanupError;
+      let serverError;
+      try {
+        await closeHttpServer(server);
+      } catch (error) {
+        serverError = error;
+      }
+      const failure = cleanupError ?? serverError;
+      if (failure) {
+        rejectResult(failure);
+        throw failure;
       }
       const outcome = { closed: true };
       resolveResult(outcome);
       return outcome;
     })();
-    return closingPromise;
+    closingPromise = attempt;
+    try {
+      return await attempt;
+    } catch (error) {
+      if (closingPromise === attempt) closingPromise = undefined;
+      throw error;
+    }
   }
 
   server.once('error', (error) => rejectResult(error));

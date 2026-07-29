@@ -64,6 +64,16 @@ function parseArguments(argv) {
   return { open };
 }
 
+function requireStudioWorkspace(config) {
+  if (!Array.isArray(config?.studioWorkspaces) || config.studioWorkspaces.length === 0) {
+    const error = new Error(
+      '写作台尚未配置：请在 publish.config.local.json 的 studioWorkspaces 中添加至少一个写作目录。',
+    );
+    error.code = 'studio_workspaces_required';
+    throw error;
+  }
+}
+
 export async function runStudio(argv = [], overrides = {}) {
   const dependencies = {
     repoRoot: DEFAULT_REPO_ROOT,
@@ -73,12 +83,16 @@ export async function runStudio(argv = [], overrides = {}) {
     openBrowser: defaultOpenBrowser,
     write: (message) => process.stdout.write(`${message}\n`),
     processSignals: true,
+    signalProcess: process,
     ...overrides,
   };
   const options = parseArguments(argv);
   const config = await dependencies.loadPublishConfig({ repoRoot: dependencies.repoRoot });
+  requireStudioWorkspace(config);
   const assets = await dependencies.buildStudioAssets();
   let studio;
+  let outcome;
+  let primaryError;
   const signalHandlers = new Map();
 
   try {
@@ -104,17 +118,43 @@ export async function runStudio(argv = [], overrides = {}) {
           studio.close().catch(() => {});
         };
         signalHandlers.set(signal, handler);
-        process.once(signal, handler);
+        dependencies.signalProcess.once(signal, handler);
       }
     }
-    return await studio.result;
-  } finally {
-    for (const [signal, handler] of signalHandlers) {
-      process.off(signal, handler);
-    }
-    if (studio) await studio.close();
-    await assets.cleanup();
+    outcome = await studio.result;
+  } catch (error) {
+    primaryError = error;
   }
+
+  let closeError;
+  let cleanupError;
+  try {
+    for (const [signal, handler] of signalHandlers) {
+      try {
+        dependencies.signalProcess.off(signal, handler);
+      } catch (error) {
+        closeError ??= error;
+      }
+    }
+    if (studio) {
+      try {
+        await studio.close();
+      } catch (error) {
+        closeError ??= error;
+      }
+    }
+  } finally {
+    try {
+      await assets.cleanup();
+    } catch (error) {
+      cleanupError = error;
+    }
+  }
+
+  if (primaryError) throw primaryError;
+  if (closeError) throw closeError;
+  if (cleanupError) throw cleanupError;
+  return outcome;
 }
 
 const directInvocation = process.argv[1]

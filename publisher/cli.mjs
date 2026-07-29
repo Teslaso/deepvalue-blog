@@ -1,11 +1,16 @@
-import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { lstat, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { buildAssetIndex as defaultBuildAssetIndex } from './lib/assets.mjs';
 import { loadPublishConfig as defaultLoadPublishConfig } from './lib/config.mjs';
+import {
+  buildDisplayManifest,
+  cancelPreparedPublication as defaultCancelPreparedPublication,
+  confirmPreparedPublication as defaultConfirmPreparedPublication,
+  formatDisplayManifest,
+  prepareNotePublication as defaultPrepareNotePublication,
+} from './lib/publish-note.mjs';
 import { createStateStore as defaultCreateStateStore } from './lib/state-store.mjs';
 import {
   applyPublicationTransaction as defaultApplyPublicationTransaction,
@@ -38,6 +43,7 @@ const VALIDATION_ERROR_NAMES = new Set([
   'ConfigValidationError',
   'FrontmatterParseError',
   'PublicationValidationError',
+  'PublicationPreparationError',
   'StateValidationError',
   'TransformError',
   'VaultIndexError',
@@ -51,52 +57,6 @@ const CONFLICT_ERROR_CODES = new Set([
 ]);
 const GIT_ERROR_CODES = new Set(['git_inspection_failed']);
 const DEFAULT_REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-function isInside(root, candidate) {
-  const relative = path.relative(root, candidate);
-  return relative !== ''
-    && relative !== '..'
-    && !relative.startsWith(`..${path.sep}`)
-    && !path.isAbsolute(relative);
-}
-
-async function realpathAllowMissing(candidate) {
-  const suffix = [];
-  let current = candidate;
-  while (true) {
-    try {
-      return path.resolve(await realpath(current), ...suffix);
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-      const parent = path.dirname(current);
-      if (parent === current) throw error;
-      suffix.unshift(path.basename(current));
-      current = parent;
-    }
-  }
-}
-
-function safeManifestTarget(value) {
-  if (
-    typeof value !== 'string'
-    || value === ''
-    || value.includes('\0')
-    || value.includes('\\')
-    || path.posix.isAbsolute(value)
-    || path.win32.isAbsolute(value)
-  ) {
-    throw new TypeError('Manifest target must be a safe repository-relative path');
-  }
-  const normalized = path.posix.normalize(value);
-  if (normalized === '.' || normalized === '..' || normalized.startsWith('../')) {
-    throw new TypeError('Manifest target must stay inside the repository');
-  }
-  return normalized;
-}
-
-function sha256(value) {
-  return createHash('sha256').update(value).digest('hex');
-}
 
 function defaultOpenBrowser(url) {
   const command = process.platform === 'darwin'
@@ -119,6 +79,61 @@ function defaultOpenBrowser(url) {
   });
 }
 
+async function runCurrentNoteWorkflow(options, dependencies, config) {
+  const prepared = await dependencies.prepareNotePublication({
+    config,
+    sourcePath: options.source,
+    allowPush: options.push,
+  }, dependencies);
+
+  try {
+    dependencies.write(formatDisplayManifest(prepared.manifest));
+    if (options.yes) {
+      dependencies.write(`Explicit --yes received; applying the exact manifest${options.push ? ' and pushing' : ' without push'}.`);
+      const result = await dependencies.confirmPreparedPublication(prepared, {
+        push: options.push,
+      });
+      return { action: 'confirm', push: options.push, result };
+    }
+
+    const publisher = await dependencies.startPublisherServer({
+      previewRoot: prepared.previewRoot,
+      route: prepared.route,
+      manifest: prepared.manifest,
+      allowPush: options.push,
+      onConfirm: ({ push }) => dependencies.confirmPreparedPublication(prepared, { push }),
+      onCancel: () => dependencies.cancelPreparedPublication(prepared),
+    });
+
+    dependencies.write(`Preview URL: ${publisher.url}`);
+    dependencies.write('No publication files have been applied; the repository remains unchanged until confirmation.');
+    dependencies.write('Recovery: choose Cancel in the browser. If interrupted, rerun after resolving any reported issue; staging remains outside the repository.');
+    if (options.open) {
+      try {
+        await dependencies.openBrowser(publisher.url);
+      } catch (error) {
+        dependencies.write(`Browser could not be opened automatically: ${error.message}`);
+        dependencies.write(`Open this URL manually: ${publisher.url}`);
+      }
+    }
+
+    try {
+      return await publisher.waitForResult();
+    } finally {
+      await publisher.close();
+    }
+  } catch (error) {
+    try {
+      await dependencies.cancelPreparedPublication(prepared);
+    } catch (cleanupError) {
+      if (cleanupError?.code !== 'transaction_already_used') {
+        dependencies.write(`Temporary transaction cleanup failed: ${cleanupError.message}`);
+      }
+    }
+    throw error;
+  }
+}
+
 export class CliUsageError extends Error {
   constructor(message) {
     super(message);
@@ -137,58 +152,7 @@ export function exitCodeForError(error) {
   return EXIT_CODES.internal;
 }
 
-export async function buildDisplayManifest(manifest, { repoRoot } = {}) {
-  if (!manifest || !Array.isArray(manifest.files) || !Array.isArray(manifest.publications)) {
-    throw new TypeError('A publication transaction manifest is required');
-  }
-  const physicalRepoRoot = await realpath(repoRoot);
-  const display = structuredClone(manifest);
-
-  display.files = await Promise.all(display.files.map(async (file) => {
-    const targetPath = safeManifestTarget(file.targetPath);
-    const destination = path.join(physicalRepoRoot, ...targetPath.split('/'));
-    const physicalDestination = await realpathAllowMissing(destination);
-    if (!isInside(physicalRepoRoot, physicalDestination)) {
-      return { ...file, operation: 'conflict' };
-    }
-
-    try {
-      const details = await lstat(destination);
-      if (!details.isFile() || details.isSymbolicLink()) {
-        return { ...file, operation: 'conflict' };
-      }
-      const beforeSha256 = sha256(await readFile(destination));
-      return {
-        ...file,
-        operation: beforeSha256 === file.sha256 ? 'unchanged' : 'update',
-        beforeSha256,
-      };
-    } catch (error) {
-      if (error?.code === 'ENOENT') return { ...file, operation: 'create' };
-      throw error;
-    }
-  }));
-  return display;
-}
-
-function formatDisplayManifest(manifest) {
-  const lines = ['Publication manifest (exact targets):', '  Notes:'];
-  for (const publication of manifest.publications) {
-    lines.push(`    - ${publication.title || publication.publishId} [${publication.publishId}]`);
-    lines.push(`      source: ${publication.sourcePath}`);
-  }
-  lines.push('  Files:');
-  for (const file of manifest.files) {
-    lines.push(`    - ${(file.operation || file.kind).toUpperCase()} ${file.targetPath}`);
-    if (file.beforeSha256) lines.push(`      before sha256:${file.beforeSha256}`);
-    lines.push(`      after sha256:${file.sha256}`);
-  }
-  return lines.join('\n');
-}
-
-function publicationRoute(notes) {
-  return `/blog/${encodeURIComponent(notes[0].publishId)}/`;
-}
+export { buildDisplayManifest };
 
 export async function runPublishingWorkflow(options, overrides = {}) {
   const dependencies = {
@@ -205,6 +169,9 @@ export async function runPublishingWorkflow(options, overrides = {}) {
     createPublicationTransaction: defaultCreatePublicationTransaction,
     buildTransactionPreview: defaultBuildTransactionPreview,
     buildDisplayManifest,
+    prepareNotePublication: defaultPrepareNotePublication,
+    confirmPreparedPublication: defaultConfirmPreparedPublication,
+    cancelPreparedPublication: defaultCancelPreparedPublication,
     applyPublicationTransaction: defaultApplyPublicationTransaction,
     confirmPublicationTransaction: defaultConfirmPublicationTransaction,
     cancelPublicationTransaction: defaultCancelPublicationTransaction,
@@ -214,28 +181,23 @@ export async function runPublishingWorkflow(options, overrides = {}) {
   };
 
   const config = await dependencies.loadConfig({ repoRoot: dependencies.repoRoot });
+  if (options.command === 'current') {
+    return runCurrentNoteWorkflow(options, dependencies, config);
+  }
+
   const stateStore = dependencies.createStateStore({ repoRoot: config.repoRoot });
   const state = await stateStore.readState();
   const vaultIndex = await dependencies.buildVaultIndex({
     vaultRoot: config.vaultRoot,
     ignoreFolders: config.ignoreFolders,
   });
-  const selectedNotes = options.command === 'current'
-    ? [await dependencies.scanCurrentNote({
-        vaultRoot: config.vaultRoot,
-        sourcePath: options.source,
-        ignoreFolders: config.ignoreFolders,
-      })].filter(Boolean)
-    : await dependencies.scanPendingNotes({
-        vaultRoot: config.vaultRoot,
-        ignoreFolders: config.ignoreFolders,
-        state,
-      });
+  const selectedNotes = await dependencies.scanPendingNotes({
+    vaultRoot: config.vaultRoot,
+    ignoreFolders: config.ignoreFolders,
+    state,
+  });
 
   if (selectedNotes.length === 0) {
-    if (options.command === 'current') {
-      throw new CliUsageError('The current note is not eligible; add the YAML boolean publish: true');
-    }
     dependencies.write('No eligible new or changed notes were found.');
     return { action: 'none', publications: 0 };
   }
@@ -294,7 +256,7 @@ export async function runPublishingWorkflow(options, overrides = {}) {
       return { action: 'confirm', push: options.push, result };
     }
 
-    const route = publicationRoute(transformedNotes);
+    const route = `/blog/${encodeURIComponent(transformedNotes[0].publishId)}/`;
     const publisher = await dependencies.startPublisherServer({
       previewRoot: path.join(preview.root, 'dist'),
       route,

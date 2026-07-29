@@ -162,10 +162,12 @@ test('display manifest labels exact create and update targets without mutating t
   await mkdir(path.dirname(existingPath), { recursive: true });
   await writeFile(existingPath, 'old entry');
   const manifest = previewManifest();
+  manifest.files[0].stagedPath = 'files/src/content/entries/alpha.md';
   const original = structuredClone(manifest);
 
   const display = await buildDisplayManifest(manifest, { repoRoot });
 
+  assert.equal(display.files[0].stagedPath, undefined);
   assert.equal(display.files[0].operation, 'update');
   assert.equal(display.files[0].beforeSha256, sha256('old entry'));
   assert.equal(display.files[0].sha256, 'a'.repeat(64));

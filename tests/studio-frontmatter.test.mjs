@@ -53,6 +53,48 @@ test('changing title never changes an existing publish_id', () => {
   assert.equal(parseYamlFrontmatter(output).data.publish_id, 'stable-url');
 });
 
+test('serializeStudioDocument rejects replacement of a locked publish_id', () => {
+  assert.throws(
+    () => serializeStudioDocument({
+      source: note({ publish_id: 'stable-url' }),
+      patch: { publish_id: 'replacement-url' },
+    }),
+    (error) => error.code === 'publish_id_locked'
+      && error.message === 'publish_id is locked once it has been set',
+  );
+});
+
+test('serializeStudioDocument rejects clearing a locked publish_id with an empty string', () => {
+  assert.throws(
+    () => serializeStudioDocument({
+      source: note({ publish_id: 'stable-url' }),
+      patch: { publish_id: '' },
+    }),
+    (error) => error.code === 'publish_id_locked'
+      && error.message === 'publish_id is locked once it has been set',
+  );
+});
+
+test('serializeStudioDocument rejects removing a locked publish_id with null', () => {
+  assert.throws(
+    () => serializeStudioDocument({
+      source: note({ publish_id: 'stable-url' }),
+      patch: { publish_id: null },
+    }),
+    (error) => error.code === 'publish_id_locked'
+      && error.message === 'publish_id is locked once it has been set',
+  );
+});
+
+test('serializeStudioDocument permits an unchanged locked publish_id', () => {
+  const output = serializeStudioDocument({
+    source: note({ publish_id: 'stable-url' }),
+    patch: { publish_id: 'stable-url' },
+  });
+
+  assert.equal(parseYamlFrontmatter(output).data.publish_id, 'stable-url');
+});
+
 test('parseStudioDocument separates normalized known fields from unknown YAML without changing the body', () => {
   const trailingSpaces = '  ';
   const source = `---

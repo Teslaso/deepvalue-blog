@@ -70,6 +70,17 @@ function serializeYaml(document, lineEnding) {
   return document.toString({ lineWidth: 0 }).replaceAll('\n', lineEnding);
 }
 
+function hasPublishId(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function lockedPublishIdError() {
+  const error = new Error('publish_id is locked once it has been set');
+  error.name = 'StudioDocumentError';
+  error.code = 'publish_id_locked';
+  return error;
+}
+
 /**
  * Parses an editable Markdown note while retaining its raw YAML fields and body.
  */
@@ -109,6 +120,14 @@ export function serializeStudioDocument({ source, patch = {}, body } = {}) {
   const parsed = parseStudioDocument(source);
   const frontmatter = findFrontmatter(source);
   const document = parseYamlDocument(frontmatter?.rawFrontmatter ?? '', '<note>');
+
+  if (
+    Object.hasOwn(patch, 'publish_id')
+    && hasPublishId(parsed.data.publish_id)
+    && patch.publish_id !== parsed.data.publish_id
+  ) {
+    throw lockedPublishIdError();
+  }
 
   for (const [name, value] of Object.entries(patch)) {
     document.set(name, value);

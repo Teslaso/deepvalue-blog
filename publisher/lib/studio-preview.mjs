@@ -1,4 +1,5 @@
 import { Marked } from 'marked';
+import { decodeHTML } from 'entities';
 import markedFootnote from 'marked-footnote';
 import sanitizeHtml from 'sanitize-html';
 
@@ -113,7 +114,7 @@ function closesFence(line, openFence) {
 }
 
 function isIndentedCodeLine(line) {
-  return /^(?: {4}|\t)(?![-+*][ \t]|\d+[.)][ \t])/u.test(line);
+  return /^(?: {4}| {0,3}\t)/u.test(line);
 }
 
 function safeUrl(value, { image = false } = {}) {
@@ -257,6 +258,10 @@ async function preprocessMarkdown(body, context) {
       continue;
     }
     if (isIndentedCodeLine(line)) {
+      if (context.inlineCodeDelimiter) {
+        output += `${await transformOutsideInlineCode(line, context)}${ending}`;
+        continue;
+      }
       output += line + ending;
       continue;
     }
@@ -267,13 +272,8 @@ async function preprocessMarkdown(body, context) {
 }
 
 function outlineText(rawText) {
-  return rawText
-    .replace(/<[^>]*>/gu, '')
-    .replace(/&(amp|quot|apos|nbsp|lt|gt);|&#(x[\da-f]+|\d+);/giu, (entity, named, numeric) => {
-      if (named) return { amp: '&', quot: '"', apos: "'", nbsp: ' ', lt: '<', gt: '>' }[named.toLocaleLowerCase('en-US')];
-      const value = numeric.startsWith('x') ? Number.parseInt(numeric.slice(1), 16) : Number.parseInt(numeric, 10);
-      return Number.isInteger(value) && value >= 0 && value <= 0x10ffff ? String.fromCodePoint(value) : entity;
-    })
+  return decodeHTML(rawText.replace(/<[^>]*>/gu, ''))
+    .replace(/[\uD800-\uDFFF]/gu, '�')
     .replace(/\s+/gu, ' ')
     .trim();
 }
@@ -290,8 +290,27 @@ function headingSlug(text) {
 function collectReservedFootnoteIds(markdown) {
   const labels = new Set();
   const referenceCounts = new Map();
-  for (const match of markdown.matchAll(/(?:^|\n)[ \t]{0,3}\[\^([^\]\n]+)\]:/gu)) labels.add(match[1]);
-  for (const match of markdown.matchAll(/\[\^([^\]\n]+)\](?!:)/gu)) {
+  const source = markdown.split(/(\r?\n)/u);
+  let openFence;
+  let visibleMarkdown = '';
+  for (let index = 0; index < source.length; index += 2) {
+    const line = source[index];
+    const ending = source[index + 1] ?? '';
+    if (openFence) {
+      if (closesFence(line, openFence)) openFence = undefined;
+      visibleMarkdown += ending;
+      continue;
+    }
+    const marker = fenceMarker(line);
+    if (marker) {
+      openFence = marker;
+      visibleMarkdown += ending;
+      continue;
+    }
+    visibleMarkdown += isIndentedCodeLine(line) ? ending : line + ending;
+  }
+  for (const match of visibleMarkdown.matchAll(/(?:^|\n)(?:[ \t]{0,3}>[ \t]*)*[ \t]{0,3}\[\^([^\]\n]+)\]:/gu)) labels.add(match[1]);
+  for (const match of visibleMarkdown.matchAll(/\[\^([^\]\n]+)\](?!:)/gu)) {
     referenceCounts.set(match[1], (referenceCounts.get(match[1]) ?? 0) + 1);
   }
   const reserved = new Set(['footnote-label']);

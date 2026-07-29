@@ -135,6 +135,26 @@ test('does not resolve Obsidian syntax inside fenced, inline, multiline, or inde
   assert.match(preview.html, /\[\[Indented\]\] !\[\[Indented\.png\]\]/);
 });
 
+test('treats every Marked indented-code form as protected and resumes after a multiline code span closes in indentation', async () => {
+  const calls = [];
+  await renderStudioPreview({
+    body: [
+      '    - [[Four-space list]]',
+      ' \t[[Mixed whitespace]]',
+      '`open',
+      '    close`',
+      '[[After close]]',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: target };
+    },
+  });
+
+  assert.deepEqual(calls, ['After close']);
+});
+
 test('removes active raw HTML, event handlers, and unsafe URL schemes', async () => {
   const preview = await renderStudioPreview({
     body: [
@@ -187,4 +207,46 @@ test('reserves generated footnote IDs and decodes outline text without duplicate
     { depth: 1, text: 'Footnote 1', id: 'footnote-1-2' },
     { depth: 1, text: 'AT&T', id: 'at-t' },
   ]);
+});
+
+test('reserves blockquote footnotes without reserving fenced pseudo-footnotes', async () => {
+  const preview = await renderStudioPreview({
+    body: [
+      '# Footnote 1',
+      '',
+      '> [^1]: 引用脚注。',
+      '',
+      '引用[^1]',
+      '',
+      '```md',
+      '[^fake]: 这只是代码。',
+      '```',
+      '',
+      '# Footnote fake',
+    ].join('\n'),
+    metadata: { title: '标题' },
+  });
+  const ids = [...preview.html.matchAll(/\bid="([^"]+)"/gu)].map((match) => match[1]);
+
+  assert.equal(new Set(ids).size, ids.length);
+  assert.match(preview.html, /<h1 id="footnote-1-2">Footnote 1<\/h1>/);
+  assert.match(preview.html, /<li id="footnote-1">/);
+  assert.match(preview.html, /href="#footnote-1" data-footnote-ref/);
+  assert.match(preview.html, /<h1 id="footnote-fake">Footnote fake<\/h1>/);
+});
+
+test('decodes all HTML entities in outline text and replaces invalid numeric surrogate entities', async () => {
+  const preview = await renderStudioPreview({
+    body: '# A&copy;B\n\n# Bad &#xD800;',
+    metadata: { title: '标题' },
+  });
+
+  assert.deepEqual(preview.outline, [
+    { depth: 1, text: 'A©B', id: 'a-b' },
+    { depth: 1, text: 'Bad �', id: 'bad' },
+  ]);
+  assert.equal([...preview.outline[1].text].some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint >= 0xd800 && codePoint <= 0xdfff;
+  }), false);
 });

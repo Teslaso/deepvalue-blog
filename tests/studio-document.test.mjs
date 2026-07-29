@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { watch, writeFileSync } from 'node:fs';
 import {
   chmod,
+  link,
   lstat,
   mkdtemp,
   mkdir,
@@ -24,7 +24,6 @@ import test from 'node:test';
 import {
   createStudioDocument,
   readStudioDocument,
-  renameStudioDocument,
   saveStudioDocument,
 } from '../publisher/lib/studio-document.mjs';
 
@@ -33,17 +32,13 @@ const execFileAsync = promisify(execFile);
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'studio-document-'));
   const research = path.join(root, 'Research');
-  const journal = path.join(root, 'Journal');
   await mkdir(research);
-  await mkdir(journal);
   return {
     root,
     research,
-    journal,
     config: {
       studioWorkspaces: [
         { id: 'research', label: '产业研究', path: await realpath(research) },
-        { id: 'journal', label: '研究日志', path: await realpath(journal) },
       ],
     },
   };
@@ -115,42 +110,61 @@ test('saveStudioDocument rechecks for an external change after writing its tempo
   const externalVersion = '---\npublish: false\n---\nlate external change\n';
   const browserVersion = '---\npublish: false\n---\nbrowser\n';
   const sourcePath = path.join(current.research, 'Copper.md');
-  let watcher;
 
   try {
     await writeFile(sourcePath, original);
-    const opened = await readStudioDocument(current.config, {
-      workspaceId: 'research',
-      relativePath: 'Copper.md',
-    });
-    const changed = new Promise((resolve, reject) => {
-      let acted = false;
-      watcher = watch(current.research, (eventType, filename) => {
-        if (acted || !String(filename).includes('.studio-tmp-')) return;
-        acted = true;
-        try {
-          writeFileSync(sourcePath, externalVersion);
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
+    const moduleUrl = pathToFileURL(
+      path.resolve('publisher/lib/studio-document.mjs'),
+    ).href;
+    const physicalSourcePath = await realpath(sourcePath);
+    const childScript = `
+      import { constants } from 'node:fs';
+      import { mock } from 'node:test';
+      import path from 'node:path';
+      import * as fileSystem from 'node:fs/promises';
+      let sourceOpens = 0;
+      const sourcePath = ${JSON.stringify(physicalSourcePath)};
+      mock.module('node:fs/promises', {
+        namedExports: {
+          ...fileSystem,
+          open: async (...args) => {
+            const candidate = path.resolve(String(args[0]));
+            const writeFlags = constants.O_WRONLY | constants.O_RDWR;
+            if (candidate === sourcePath && (args[1] & writeFlags) === 0) {
+              sourceOpens += 1;
+              if (sourceOpens === 2) {
+                await fileSystem.writeFile(sourcePath, ${JSON.stringify(externalVersion)});
+              }
+            }
+            return fileSystem.open(...args);
+          },
+        },
       });
-    });
+      const store = await import(${JSON.stringify(moduleUrl)});
+      try {
+        await store.saveStudioDocument(${JSON.stringify(current.config)}, {
+          workspaceId: 'research',
+          relativePath: 'Copper.md',
+          source: ${JSON.stringify(browserVersion)},
+          expectedFingerprint: ${JSON.stringify(digest(original))},
+        });
+        process.exitCode = 2;
+      } catch (error) {
+        if (error.code !== 'external_change') throw error;
+        process.stdout.write('external_change\\n');
+      }
+    `;
+    const child = await execFileAsync(process.execPath, [
+      '--experimental-test-module-mocks',
+      '--input-type=module',
+      '--eval',
+      childScript,
+    ]);
 
-    await assert.rejects(
-      saveStudioDocument(current.config, {
-        workspaceId: 'research',
-        relativePath: 'Copper.md',
-        source: browserVersion,
-        expectedFingerprint: opened.fingerprint,
-      }),
-      (error) => error.code === 'external_change',
-    );
-    await changed;
+    assert.equal(child.stdout, 'external_change\n');
     assert.equal(await readFile(sourcePath, 'utf8'), externalVersion);
     assert.deepEqual(await readdir(current.research), ['Copper.md']);
   } finally {
-    watcher?.close();
     await cleanup(current.root);
   }
 });
@@ -246,6 +260,35 @@ test('saveStudioDocument atomically writes mode 0600 and retains a locked publis
   }
 });
 
+test('malformed current frontmatter cannot disable the textual publish_id lock', async () => {
+  const current = await fixture();
+  const original = `---
+publish_id: stable-id
+tags: [unterminated
+original
+`;
+  const replacement = original.replace('stable-id', 'replacement-id');
+  const sourcePath = path.join(current.research, 'Broken.md');
+  const id = { workspaceId: 'research', relativePath: 'Broken.md' };
+
+  try {
+    await writeFile(sourcePath, original);
+    const opened = await readStudioDocument(current.config, id);
+
+    await assert.rejects(
+      saveStudioDocument(current.config, {
+        ...id,
+        source: replacement,
+        expectedFingerprint: opened.fingerprint,
+      }),
+      (error) => error.code === 'publish_id_locked',
+    );
+    assert.equal(await readFile(sourcePath, 'utf8'), original);
+  } finally {
+    await cleanup(current.root);
+  }
+});
+
 test('createStudioDocument derives a safe filename and adds a numeric collision suffix', async () => {
   const current = await fixture();
 
@@ -267,47 +310,169 @@ test('createStudioDocument derives a safe filename and adds a numeric collision 
   }
 });
 
-test('renameStudioDocument stays in the source workspace and refuses collisions', async () => {
+test('createStudioDocument reserves filename headroom for its randomized temporary sibling', async () => {
   const current = await fixture();
-  const source = '---\npublish: false\ntitle: Copper\n---\nbody\n';
+  const longTitle = '铜'.repeat(100);
 
   try {
-    await mkdir(path.join(current.research, 'Nested'));
-    await writeFile(path.join(current.research, 'Nested', 'Copper.md'), source);
-    await writeFile(path.join(current.research, 'Nested', 'Taken.md'), 'taken');
-    const opened = await readStudioDocument(current.config, {
+    const created = await createStudioDocument(current.config, {
       workspaceId: 'research',
-      relativePath: 'Nested/Copper.md',
+      title: longTitle,
+      metadata: { publish: false },
+      body: 'long filename draft\n',
     });
 
-    const renamed = await renameStudioDocument(current.config, {
-      workspaceId: 'research',
-      relativePath: 'Nested/Copper.md',
-      title: 'Copper Cycle',
-      expectedFingerprint: opened.fingerprint,
-    });
-    assert.equal(renamed.relativePath, 'Nested/Copper Cycle.md');
-    assert.equal(await readFile(path.join(current.research, 'Nested', 'Copper Cycle.md'), 'utf8'), source);
+    assert.equal(created.metadata.title, longTitle);
+    assert.equal(Buffer.byteLength(created.relativePath, 'utf8') <= 160, true);
+    assert.equal(await readFile(path.join(current.research, created.relativePath), 'utf8'), created.source);
+  } finally {
+    await cleanup(current.root);
+  }
+});
+
+test('createStudioDocument cleanup leaves a replaced temporary leaf untouched', async () => {
+  const current = await fixture();
+  const replacement = 'unrelated replacement leaf';
+
+  try {
+    const moduleUrl = pathToFileURL(
+      path.resolve('publisher/lib/studio-document.mjs'),
+    ).href;
+    const targetPath = path.join(await realpath(current.research), 'Leaf.md');
+    const childScript = `
+      import { mock } from 'node:test';
+      import * as fileSystem from 'node:fs/promises';
+      let temporaryPath;
+      let replaced = false;
+      const targetPath = ${JSON.stringify(targetPath)};
+      mock.module('node:fs/promises', {
+        namedExports: {
+          ...fileSystem,
+          lstat: async (candidate, ...args) => {
+            const value = String(candidate);
+            if (value.includes('.studio-tmp-')) temporaryPath = value;
+            if (!replaced && value === targetPath && temporaryPath) {
+              replaced = true;
+              await fileSystem.rm(temporaryPath, { force: true });
+              await fileSystem.writeFile(temporaryPath, ${JSON.stringify(replacement)});
+            }
+            return fileSystem.lstat(candidate, ...args);
+          },
+        },
+      });
+      const store = await import(${JSON.stringify(moduleUrl)});
+      const created = await store.createStudioDocument(${JSON.stringify(current.config)}, {
+        workspaceId: 'research',
+        title: 'Leaf',
+        metadata: { publish: false },
+        body: 'draft\\n',
+      });
+      process.stdout.write(created.relativePath + '\\n');
+    `;
+    const child = await execFileAsync(process.execPath, [
+      '--experimental-test-module-mocks',
+      '--input-type=module',
+      '--eval',
+      childScript,
+    ]);
+
+    assert.equal(child.stdout, 'Leaf.md\n');
+    const temporaryNames = (await readdir(current.research))
+      .filter((name) => name.includes('.studio-tmp-'));
+    assert.equal(temporaryNames.length, 1);
+    assert.equal(
+      await readFile(path.join(current.research, temporaryNames[0]), 'utf8'),
+      replacement,
+    );
+  } finally {
+    await cleanup(current.root);
+  }
+});
+
+test('readStudioDocument rejects a hard-link alias into the configured workspace', async () => {
+  const current = await fixture();
+  const outsideSource = path.join(current.root, 'Private.md');
+
+  try {
+    await writeFile(outsideSource, 'outside private body');
+    await link(outsideSource, path.join(current.research, 'Alias.md'));
 
     await assert.rejects(
-      renameStudioDocument(current.config, {
+      readStudioDocument(current.config, {
         workspaceId: 'research',
-        relativePath: 'Nested/Copper Cycle.md',
-        newRelativePath: '../Journal/Moved.md',
-        expectedFingerprint: renamed.fingerprint,
+        relativePath: 'Alias.md',
       }),
       (error) => error.code === 'unsafe_path',
     );
-    await assert.rejects(
-      renameStudioDocument(current.config, {
-        workspaceId: 'research',
-        relativePath: 'Nested/Copper Cycle.md',
-        title: 'Taken',
-        expectedFingerprint: renamed.fingerprint,
-      }),
-      (error) => error.code === 'destination_exists',
-    );
-    assert.equal((await readdir(current.journal)).length, 0);
+  } finally {
+    await cleanup(current.root);
+  }
+});
+
+test('saveStudioDocument closes the workspace handle when parent guard acquisition fails', async () => {
+  const current = await fixture();
+
+  try {
+    await mkdir(path.join(current.research, 'Nested'));
+    await writeFile(path.join(current.research, 'Nested', 'Copper.md'), 'original');
+    const moduleUrl = pathToFileURL(
+      path.resolve('publisher/lib/studio-document.mjs'),
+    ).href;
+    const blockedParent = await realpath(path.join(current.research, 'Nested'));
+    const childScript = `
+      import { constants } from 'node:fs';
+      import { mock } from 'node:test';
+      import path from 'node:path';
+      import * as fileSystem from 'node:fs/promises';
+      const tracked = [];
+      const blockedParent = ${JSON.stringify(blockedParent)};
+      mock.module('node:fs/promises', {
+        namedExports: {
+          ...fileSystem,
+          open: async (...args) => {
+            if (
+              path.resolve(String(args[0])) === blockedParent
+              && (args[1] & (constants.O_DIRECTORY ?? 0)) !== 0
+            ) {
+              const error = new Error('injected parent open failure');
+              error.code = 'EACCES';
+              throw error;
+            }
+            const handle = await fileSystem.open(...args);
+            tracked.push(handle);
+            return handle;
+          },
+        },
+      });
+      const store = await import(${JSON.stringify(moduleUrl)});
+      try {
+        await store.saveStudioDocument(${JSON.stringify(current.config)}, {
+          workspaceId: 'research',
+          relativePath: 'Nested/Copper.md',
+          source: 'replacement',
+          expectedFingerprint: '${'0'.repeat(64)}',
+        });
+        process.exitCode = 2;
+      } catch {
+        const closed = await Promise.all(tracked.map(async (handle) => {
+          try {
+            await handle.stat();
+            return false;
+          } catch (error) {
+            return error.code === 'EBADF';
+          }
+        }));
+        process.stdout.write(closed.every(Boolean) ? 'all_closed\\n' : 'handle_leaked\\n');
+      }
+    `;
+    const child = await execFileAsync(process.execPath, [
+      '--experimental-test-module-mocks',
+      '--input-type=module',
+      '--eval',
+      childScript,
+    ]);
+
+    assert.equal(child.stdout, 'all_closed\n');
   } finally {
     await cleanup(current.root);
   }

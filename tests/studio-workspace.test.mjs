@@ -122,10 +122,22 @@ title: [unterminated
 ${bodySecret}
 `,
     );
+    await writeFile(
+      path.join(current.workspace, 'Invalid.md'),
+      `---
+publish: true
+domain: ai
+format: log
+section: commodities
+---
+public body
+`,
+    );
 
     const [{ documents }] = await scanStudioWorkspace(current.config);
     const copper = documents.find(({ relativePath }) => relativePath === 'Copper.md');
     const broken = documents.find(({ relativePath }) => relativePath === 'Broken.md');
+    const invalid = documents.find(({ relativePath }) => relativePath === 'Invalid.md');
 
     assert.deepEqual(copper.search, {
       filename: 'Copper.md',
@@ -141,10 +153,18 @@ ${bodySecret}
 
     assert.equal(broken.status, 'invalid');
     assert.equal(broken.diagnostics[0].code, 'invalid_yaml');
+    assert.equal(invalid.status, 'invalid');
+    assert.deepEqual(invalid.diagnostics, [{
+      filename: 'Invalid.md',
+      field: 'section',
+      message: 'Publication metadata is invalid',
+      code: 'invalid_section',
+    }]);
     const serialized = JSON.stringify(documents);
     assert.equal(serialized.includes(bodySecret), false);
     assert.equal(serialized.includes(privateYaml), false);
     assert.equal(serialized.includes('unterminated'), false);
+    assert.equal(serialized.includes('Section commodities'), false);
   } finally {
     await cleanup(current.root);
   }

@@ -7,7 +7,6 @@ import {
   realpath,
   rename,
   rm,
-  unlink,
 } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -45,6 +44,7 @@ function sameIdentity(left, right) {
 function sameSnapshot(left, right) {
   return sameIdentity(left, right)
     && left.size === right.size
+    && left.nlink === right.nlink
     && left.mtimeMs === right.mtimeMs
     && left.ctimeMs === right.ctimeMs;
 }
@@ -301,6 +301,9 @@ async function secureRead(workspaceGuard, relativePath) {
     if (lexicalStats.isSymbolicLink() || !lexicalStats.isFile()) {
       throw documentError('Studio document must be a regular file', 'unsafe_path');
     }
+    if (lexicalStats.nlink !== 1) {
+      throw documentError('Studio documents must not be hard-link aliases', 'unsafe_path');
+    }
     const physicalCandidate = await resolveExistingContainedPath({
       root: workspaceGuard.root,
       rawPath: relativePath,
@@ -317,6 +320,9 @@ async function secureRead(workspaceGuard, relativePath) {
     );
     const before = await handle.stat();
     const currentPathStats = await lstat(candidate);
+    if (before.nlink !== 1 || currentPathStats.nlink !== 1) {
+      throw documentError('Studio documents must not be hard-link aliases', 'unsafe_path');
+    }
     if (
       !before.isFile()
       || currentPathStats.isSymbolicLink()
@@ -328,6 +334,9 @@ async function secureRead(workspaceGuard, relativePath) {
     await workspaceGuard.assertStable();
     const bytes = await handle.readFile();
     const after = await handle.stat();
+    if (after.nlink !== 1) {
+      throw documentError('Studio documents must not be hard-link aliases', 'unsafe_path');
+    }
     if (!sameSnapshot(before, after)) {
       throw documentError('Studio document changed while it was being read', 'external_change');
     }
@@ -510,7 +519,9 @@ function safeFilename(title) {
   if (filename === '' || filename === '.' || filename === '..' || WINDOWS_RESERVED_NAME.test(filename)) {
     filename = 'Untitled';
   }
-  const maxBaseBytes = 220;
+  // Keep the final component below common NAME_MAX limits after adding the
+  // temporary prefix, randomized suffix, extension, and numeric collision suffix.
+  const maxBaseBytes = 140;
   while (Buffer.byteLength(filename, 'utf8') > maxBaseBytes) {
     filename = [...filename].slice(0, -1).join('').trimEnd();
   }
@@ -536,6 +547,13 @@ function assertPublishIdStable(currentSource, replacementSource) {
   try {
     current = parseStudioDocument(currentSource);
   } catch {
+    const currentTextLocks = textualPublishIdLocks(currentSource);
+    if (
+      currentTextLocks.length > 0
+      && JSON.stringify(currentTextLocks) !== JSON.stringify(textualPublishIdLocks(replacementSource))
+    ) {
+      throw documentError('publish_id is locked once it has been set', 'publish_id_locked');
+    }
     return;
   }
   const publishId = current.data.publish_id;
@@ -550,6 +568,20 @@ function assertPublishIdStable(currentSource, replacementSource) {
   if (replacement.data.publish_id !== publishId) {
     throw documentError('publish_id is locked once it has been set', 'publish_id_locked');
   }
+}
+
+function textualPublishIdLocks(source) {
+  const opening = /^---\r?\n/u.exec(source);
+  if (!opening) return [];
+  const remainder = source.slice(opening[0].length);
+  const closing = /\r?\n---(?:\r?\n|$)/u.exec(remainder);
+  const frontmatter = closing ? remainder.slice(0, closing.index) : remainder;
+  const locks = [];
+  const pattern = /^[ \t]*(?:publish_id|"publish_id"|'publish_id')[ \t]*:[ \t]*(.*?)[ \t]*$/gmu;
+  for (const match of frontmatter.matchAll(pattern)) {
+    locks.push(match[1]);
+  }
+  return locks;
 }
 
 function queueKey(root, relativePath) {
@@ -644,10 +676,12 @@ export async function saveStudioDocument(config, input = {}) {
   const workspace = workspaceFromConfig(config, input.workspaceId);
 
   return enqueue(queueKey(workspace.path, relativePath), async () => {
-    const guard = await openStudioWorkspaceGuard(config, input.workspaceId);
-    const parent = await openParentGuard(guard, path.posix.dirname(relativePath));
+    let guard;
+    let parent;
     let temporary;
     try {
+      guard = await openStudioWorkspaceGuard(config, input.workspaceId);
+      parent = await openParentGuard(guard, path.posix.dirname(relativePath));
       const opened = await secureRead(guard, relativePath);
       if (sha256(opened.bytes) !== fingerprint) {
         throw documentError('Studio document changed outside the editor', 'external_change');
@@ -662,8 +696,8 @@ export async function saveStudioDocument(config, input = {}) {
         replacementBytes,
       );
 
-      await assertUnchanged(guard, relativePath, fingerprint, opened.identity);
       await parent.assertStable();
+      await assertUnchanged(guard, relativePath, fingerprint, opened.identity);
       await rename(temporary.path, toNativePath(guard.root, relativePath));
       const finalStats = await lstat(toNativePath(guard.root, relativePath));
       if (
@@ -679,9 +713,11 @@ export async function saveStudioDocument(config, input = {}) {
         relativePath,
       });
     } finally {
-      if (temporary) await cleanupTemporary(parent, temporary.path, temporary.identity);
-      await parent.close();
-      await guard.close();
+      if (temporary && parent) {
+        await cleanupTemporary(parent, temporary.path, temporary.identity);
+      }
+      if (parent) await parent.close().catch(() => {});
+      if (guard) await guard.close().catch(() => {});
     }
   });
 }
@@ -733,7 +769,7 @@ async function createAtAvailablePath(guard, parent, filename, bytes) {
       if (targetStats.isSymbolicLink() || !sameIdentity(temporary.identity, targetStats)) {
         throw documentError('Created document identity was not stable', 'unsafe_path');
       }
-      await rm(temporary.path, { force: true });
+      await cleanupTemporary(parent, temporary.path, temporary.identity);
       return relativePath;
     } finally {
       await cleanupTemporary(parent, temporary.path, temporary.identity);
@@ -749,107 +785,19 @@ export async function createStudioDocument(config, input = {}) {
   const bytes = Buffer.from(source, 'utf8');
 
   return enqueue(queueKey(workspace.path, '<create>'), async () => {
-    const guard = await openStudioWorkspaceGuard(config, input.workspaceId);
-    const parent = await openParentGuard(guard, '.');
+    let guard;
+    let parent;
     try {
+      guard = await openStudioWorkspaceGuard(config, input.workspaceId);
+      parent = await openParentGuard(guard, '.');
       const relativePath = await createAtAvailablePath(guard, parent, filename, bytes);
       return await readStudioDocument(config, {
         workspaceId: input.workspaceId,
         relativePath,
       });
     } finally {
-      await parent.close();
-      await guard.close();
-    }
-  });
-}
-
-function renameDestination(input, sourceRelativePath) {
-  if (Object.hasOwn(input, 'newRelativePath')) {
-    return normalizedRelativeMarkdownPath(input.newRelativePath);
-  }
-  const parent = path.posix.dirname(sourceRelativePath);
-  const filename = safeFilename(input.title);
-  return parent === '.' ? filename : `${parent}/${filename}`;
-}
-
-export async function renameStudioDocument(config, input = {}) {
-  const sourceRelativePath = normalizedRelativeMarkdownPath(input.relativePath);
-  const fingerprint = expectedFingerprint(input.expectedFingerprint);
-  const destinationRelativePath = renameDestination(input, sourceRelativePath);
-  const workspace = workspaceFromConfig(config, input.workspaceId);
-  if (destinationRelativePath === sourceRelativePath) {
-    return readStudioDocument(config, {
-      workspaceId: input.workspaceId,
-      relativePath: sourceRelativePath,
-    });
-  }
-
-  return enqueue(queueKey(workspace.path, sourceRelativePath), async () => {
-    const guard = await openStudioWorkspaceGuard(config, input.workspaceId);
-    const sourceParent = await openParentGuard(guard, path.posix.dirname(sourceRelativePath));
-    const destinationParentPath = path.posix.dirname(destinationRelativePath);
-    const destinationParent = destinationParentPath === path.posix.dirname(sourceRelativePath)
-      ? sourceParent
-      : await openParentGuard(guard, destinationParentPath);
-    let destinationLinked = false;
-    let sourceIdentity;
-
-    try {
-      const opened = await secureRead(guard, sourceRelativePath);
-      sourceIdentity = opened.identity;
-      if (sha256(opened.bytes) !== fingerprint) {
-        throw documentError('Studio document changed outside the editor', 'external_change');
-      }
-      await resolveMissingContainedPath({
-        root: guard.root,
-        rawPath: destinationRelativePath,
-        label: 'Renamed studio document',
-        allowRoot: false,
-      });
-      await assertNoSymlinkSegments(guard.root, destinationRelativePath, { includeLeaf: false });
-      await assertUnchanged(guard, sourceRelativePath, fingerprint, sourceIdentity);
-      await Promise.all([sourceParent.assertStable(), destinationParent.assertStable()]);
-
-      try {
-        await link(
-          toNativePath(guard.root, sourceRelativePath),
-          toNativePath(guard.root, destinationRelativePath),
-        );
-        destinationLinked = true;
-      } catch (error) {
-        if (error?.code === 'EEXIST') {
-          throw documentError('Rename destination already exists', 'destination_exists', error);
-        }
-        throw error;
-      }
-
-      const destinationStats = await lstat(toNativePath(guard.root, destinationRelativePath));
-      if (destinationStats.isSymbolicLink() || !sameIdentity(sourceIdentity, destinationStats)) {
-        throw documentError('Rename destination identity was not stable', 'unsafe_path');
-      }
-      await unlink(toNativePath(guard.root, sourceRelativePath));
-      destinationLinked = false;
-      await Promise.all([sourceParent.assertStable(), destinationParent.assertStable()]);
-      return await readStudioDocument(config, {
-        workspaceId: input.workspaceId,
-        relativePath: destinationRelativePath,
-      });
-    } finally {
-      if (destinationLinked && sourceIdentity) {
-        try {
-          await destinationParent.assertStable();
-          const remaining = await lstat(toNativePath(guard.root, destinationRelativePath));
-          if (!remaining.isSymbolicLink() && sameIdentity(sourceIdentity, remaining)) {
-            await unlink(toNativePath(guard.root, destinationRelativePath));
-          }
-        } catch {
-          // Do not unlink through a parent whose identity can no longer be trusted.
-        }
-      }
-      if (destinationParent !== sourceParent) await destinationParent.close();
-      await sourceParent.close();
-      await guard.close();
+      if (parent) await parent.close().catch(() => {});
+      if (guard) await guard.close().catch(() => {});
     }
   });
 }

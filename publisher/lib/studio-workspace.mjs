@@ -69,6 +69,19 @@ async function listMarkdownFiles(guard, relativeDirectory = '') {
 
 function indexEntry(document) {
   const filename = path.posix.basename(document.relativePath);
+  const diagnostics = document.diagnostics.map((entry) => ({
+    filename: document.relativePath,
+    field: typeof entry.field === 'string'
+      && /^(?:<frontmatter>|[a-z_]+(?:\[\d+\])?)$/u.test(entry.field)
+      ? entry.field
+      : '<metadata>',
+    message: entry.field === '<frontmatter>'
+      ? 'Frontmatter is invalid'
+      : 'Publication metadata is invalid',
+    code: typeof entry.code === 'string' && /^[a-z0-9_]+$/u.test(entry.code)
+      ? entry.code
+      : 'invalid_metadata',
+  }));
   return {
     workspaceId: document.workspaceId,
     relativePath: document.relativePath,
@@ -81,7 +94,7 @@ function indexEntry(document) {
     fingerprint: document.fingerprint,
     modifiedAt: document.modifiedAt,
     status: document.status,
-    diagnostics: document.diagnostics,
+    diagnostics,
     search: {
       filename,
       title: typeof document.metadata.title === 'string' ? document.metadata.title : undefined,

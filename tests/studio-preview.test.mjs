@@ -155,6 +155,48 @@ test('treats every Marked indented-code form as protected and resumes after a mu
   assert.deepEqual(calls, ['After close']);
 });
 
+test('does not resolve blockquote-indented code or reserve its pseudo-footnote', async () => {
+  const calls = [];
+  const preview = await renderStudioPreview({
+    body: [
+      '>     [[Quoted code]]',
+      '>     [^fake]: only code',
+      '',
+      '# Footnote fake',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: target };
+    },
+  });
+
+  assert.deepEqual(calls, []);
+  assert.match(preview.html, /\[\[Quoted code\]\]/);
+  assert.match(preview.html, /<h1 id="footnote-fake">Footnote fake<\/h1>/);
+});
+
+test('resolves nested unordered and ordered list wiki links instead of treating them as code', async () => {
+  const calls = [];
+  const preview = await renderStudioPreview({
+    body: [
+      '- parent',
+      '    - [[Nested child]]',
+      '1. ordered parent',
+      '    1. [[Nested ordered]]',
+    ].join('\n'),
+    metadata: { title: '标题' },
+    resolveWikiLink: (target) => {
+      calls.push(target);
+      return { kind: 'plain-text', label: `${target} resolved` };
+    },
+  });
+
+  assert.deepEqual(calls, ['Nested child', 'Nested ordered']);
+  assert.match(preview.html, /Nested child resolved/);
+  assert.match(preview.html, /Nested ordered resolved/);
+});
+
 test('removes active raw HTML, event handlers, and unsafe URL schemes', async () => {
   const preview = await renderStudioPreview({
     body: [

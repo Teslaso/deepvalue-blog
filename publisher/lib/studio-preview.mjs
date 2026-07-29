@@ -113,8 +113,57 @@ function closesFence(line, openFence) {
     && new RegExp(`^(?: {0,3})(?:>\\s*)*${openFence[0] === '`' ? '`' : '~'}{${openFence.length},}\\s*$`, 'u').test(line));
 }
 
-function isIndentedCodeLine(line) {
-  return /^(?: {4}| {0,3}\t)/u.test(line);
+function blockquoteContent(line) {
+  let content = line;
+  let depth = 0;
+  while (true) {
+    const prefix = content.match(/^ {0,3}>[ \t]?/u)?.[0];
+    if (!prefix) return { content, depth };
+    content = content.slice(prefix.length);
+    depth += 1;
+  }
+}
+
+function indentationInfo(content) {
+  let columns = 0;
+  let index = 0;
+  while (index < content.length && (content[index] === ' ' || content[index] === '\t')) {
+    columns += content[index] === '\t' ? 4 - (columns % 4) : 1;
+    index += 1;
+  }
+  const marker = /^(?:[-+*]|\d+[.)])[ \t]+/u.test(content.slice(index));
+  return { columns, index, marker };
+}
+
+function lineBlockInfo(line) {
+  const { content, depth } = blockquoteContent(line);
+  return { content, ...indentationInfo(content), depth };
+}
+
+function createBlockState() {
+  return { listIndentsByQuoteDepth: new Map() };
+}
+
+function isIndentedCodeLine(line, blockState) {
+  const info = lineBlockInfo(line);
+  if (info.columns < 4) return false;
+  const parentIndents = blockState.listIndentsByQuoteDepth.get(info.depth) ?? [];
+  return !(info.marker && parentIndents.some((indent) => indent < info.columns));
+}
+
+function observeBlockLine(line, blockState) {
+  const { content, depth, columns, marker } = lineBlockInfo(line);
+  if (marker) {
+    const existing = blockState.listIndentsByQuoteDepth.get(depth) ?? [];
+    blockState.listIndentsByQuoteDepth.set(depth, [
+      ...existing.filter((indent) => indent < columns),
+      columns,
+    ]);
+    return;
+  }
+  if (content.trim() !== '' && columns === 0) {
+    blockState.listIndentsByQuoteDepth.delete(depth);
+  }
 }
 
 function safeUrl(value, { image = false } = {}) {
@@ -243,6 +292,7 @@ async function preprocessMarkdown(body, context) {
   const lines = body.split(/(\r?\n)/u);
   let output = '';
   let openFence;
+  const blockState = createBlockState();
   for (let index = 0; index < lines.length; index += 2) {
     const line = lines[index];
     const ending = lines[index + 1] ?? '';
@@ -257,7 +307,7 @@ async function preprocessMarkdown(body, context) {
       output += line + ending;
       continue;
     }
-    if (isIndentedCodeLine(line)) {
+    if (isIndentedCodeLine(line, blockState)) {
       if (context.inlineCodeDelimiter) {
         output += `${await transformOutsideInlineCode(line, context)}${ending}`;
         continue;
@@ -267,6 +317,7 @@ async function preprocessMarkdown(body, context) {
     }
     const source = context.inlineCodeDelimiter ? line : transformCalloutHeader(line);
     output += `${await transformOutsideInlineCode(source, context)}${ending}`;
+    observeBlockLine(line, blockState);
   }
   return output;
 }
@@ -293,6 +344,7 @@ function collectReservedFootnoteIds(markdown) {
   const source = markdown.split(/(\r?\n)/u);
   let openFence;
   let visibleMarkdown = '';
+  const blockState = createBlockState();
   for (let index = 0; index < source.length; index += 2) {
     const line = source[index];
     const ending = source[index + 1] ?? '';
@@ -307,7 +359,12 @@ function collectReservedFootnoteIds(markdown) {
       visibleMarkdown += ending;
       continue;
     }
-    visibleMarkdown += isIndentedCodeLine(line) ? ending : line + ending;
+    if (isIndentedCodeLine(line, blockState)) {
+      visibleMarkdown += ending;
+      continue;
+    }
+    visibleMarkdown += line + ending;
+    observeBlockLine(line, blockState);
   }
   for (const match of visibleMarkdown.matchAll(/(?:^|\n)(?:[ \t]{0,3}>[ \t]*)*[ \t]{0,3}\[\^([^\]\n]+)\]:/gu)) labels.add(match[1]);
   for (const match of visibleMarkdown.matchAll(/\[\^([^\]\n]+)\](?!:)/gu)) {

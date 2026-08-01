@@ -222,7 +222,7 @@ function dispatchImageErrors(view, errors) {
   }));
 }
 
-function handleTransfer(view, event, onPasteImage) {
+export function handleTransfer(view, event, onPasteImage) {
   if (event.type === 'drop') {
     const position = view.posAtCoords({ x: event.clientX, y: event.clientY });
     if (position !== null) {
@@ -233,6 +233,7 @@ function handleTransfer(view, event, onPasteImage) {
     event,
     onPasteImage,
     insertText: (text) => {
+      if (!view.dom.isConnected) return;
       const selection = view.state.selection.main;
       view.dispatch({
         changes: { from: selection.from, to: selection.to, insert: text },

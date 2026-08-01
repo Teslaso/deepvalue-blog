@@ -17,6 +17,7 @@ import {
   createChangeNotifier,
   dispatchStudioSave,
   extractMarkdownOutline,
+  handleTransfer,
   startImageTransfer,
 } from '../publisher/studio/client/editor.js';
 
@@ -283,6 +284,36 @@ test('createChangeNotifier debounces the latest change and cancels after destroy
   notifier.schedule('ignored');
   await new Promise((resolve) => setTimeout(resolve, 35));
   assert.deepEqual(changes, ['second']);
+});
+
+test('handleTransfer never dispatches into a destroyed editor after upload completes', async () => {
+  const event = {
+    type: 'paste',
+    clipboardData: { files: [{ name: 'chart.png', type: 'image/png' }] },
+    preventDefault() {},
+  };
+  const view = {
+    dom: {
+      isConnected: false,
+      ownerDocument: {
+        defaultView: {
+          CustomEvent: class {
+            constructor(type, options) {
+              this.type = type;
+              Object.assign(this, options);
+            }
+          },
+        },
+        dispatchEvent: () => true,
+      },
+    },
+    state: { selection: { main: { from: 0, to: 0 } } },
+    dispatch: () => assert.fail('destroyed editor must not receive dispatches'),
+  };
+
+  const handled = handleTransfer(view, event, async () => '![[Attachments/Studio/chart.png]]');
+  assert.equal(handled, true);
+  await new Promise((resolve) => setTimeout(resolve, 10));
 });
 
 test('dispatchStudioSave emits a catchable bubbling client event', () => {

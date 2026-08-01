@@ -365,5 +365,16 @@ export function createMarkdownEditor({
     getOutline() {
       return destroyed ? [] : extractMarkdownOutline(view.state.doc.toString());
     },
+    revealLine(line) {
+      if (destroyed) return;
+      const target = view.state.doc.line(
+        Math.max(1, Math.min(Number(line) || 1, view.state.doc.lines)),
+      );
+      view.dispatch({
+        selection: { anchor: target.from },
+        effects: EditorView.scrollIntoView(target.from, { y: 'start' }),
+      });
+      view.focus();
+    },
   };
 }

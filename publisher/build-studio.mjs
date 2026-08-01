@@ -6,11 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const PUBLISHER_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_ENTRY = path.join(PUBLISHER_ROOT, 'studio', 'client', 'index.js');
-const EDITOR_CSS = `
-.dv-markdown-editor { min-height: 24rem; }
-.dv-markdown-editor .cm-editor { height: 100%; }
-.dv-markdown-editor .cm-scroller { overflow: auto; }
-`;
+const CLIENT_CSS_ENTRY = path.join(PUBLISHER_ROOT, 'studio', 'client', 'styles.css');
 
 function isContained(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -60,12 +56,7 @@ export async function buildStudioAssets({ outputDir } = {}) {
       logLevel: 'silent',
     }),
     build({
-      stdin: {
-        contents: EDITOR_CSS,
-        loader: 'css',
-        resolveDir: PUBLISHER_ROOT,
-        sourcefile: 'studio-editor.css',
-      },
+      entryPoints: [CLIENT_CSS_ENTRY],
       outfile: cssPath,
       bundle: true,
       platform: 'browser',

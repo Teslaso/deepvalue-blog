@@ -9,6 +9,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { loadPublishConfig as defaultLoadPublishConfig } from './lib/config.mjs';
+import { buildStudioAssets as defaultBundleClientAssets } from './build-studio.mjs';
 import { startStudioServer as defaultStartStudioServer } from './studio-server.mjs';
 
 const PUBLISHER_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -37,11 +38,15 @@ function defaultOpenBrowser(url) {
 
 export async function buildStudioAssets({
   sourceRoot = STUDIO_SOURCE_ROOT,
+  bundleClientAssets = defaultBundleClientAssets,
 } = {}) {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'deep-value-studio-'));
   const publicRoot = path.join(temporaryRoot, 'public');
   try {
     await cp(sourceRoot, publicRoot, { recursive: true, force: false });
+    // 浏览器 bundle 输出到 publicRoot/assets（位于 OS 临时目录内），
+    // 由服务端 /_studio/assets/* 路由提供；client/ 源文件不会被路由暴露。
+    await bundleClientAssets({ outputDir: path.join(publicRoot, 'assets') });
   } catch (error) {
     await rm(temporaryRoot, { recursive: true, force: true });
     throw error;

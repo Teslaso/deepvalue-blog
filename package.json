@@ -16,7 +16,9 @@
     "publish:check": "npm run prepare:publish && npm run build",
     "publish:current": "node publisher/cli.mjs current",
     "publish:pending": "node publisher/cli.mjs pending",
-    "publish:test": "node --test tests/publisher-*.test.mjs"
+    "publish:test": "node --test tests/publisher-*.test.mjs",
+    "studio": "node publisher/studio.mjs",
+    "studio:test": "node --test tests/studio-*.test.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "6.10.4",

@@ -37,3 +37,7 @@ publish.config.local.json
 .publish-state.json.*
 .publish-staging/
 .publish-preview/
+.publish-studio/
+
+# local execution ledgers
+.superpowers/

@@ -177,3 +177,47 @@ npm run build
 
 The old `npm run prepare:publish` attachment mover is disabled. It exits with
 migration instructions and never edits Markdown or moves source attachments.
+
+## 7. Writing Studio (local Web editor)
+
+The writing studio is a loopback-only Web interface for editing the Markdown
+notes directly inside the configured Vault publishing directories, with an
+immediate blog-style preview and the same two-stage publication transaction as
+the CLI.
+
+Configure it in `publish.config.local.json`:
+
+```json
+{
+  "studioWorkspaces": [
+    { "id": "research", "label": "产业研究", "path": "Publishing/Research" }
+  ],
+  "studioAttachmentRoot": "Attachments/Studio"
+}
+```
+
+Then start it:
+
+```bash
+npm run studio            # opens the browser
+npm run studio -- --no-open
+```
+
+- The server listens only on `127.0.0.1` and authenticates every API call with
+  a per-session token embedded in the printed URL.
+- Only configured workspaces are scanned; the rest of the Vault is invisible.
+- Edits auto-save after about one second of idle time. Every save is atomic and
+  fingerprint-checked: if Obsidian or Finder changed the file, the studio stops
+  auto-saving and offers “重新载入磁盘版本”, “打开对比”, and “保留网页版本”.
+- Paste or drop an image into the editor to store it under
+  `studioAttachmentRoot`; the returned Obsidian embed is inserted at the caret.
+- “准备发布” saves first, then shows the real target route, a sandboxed final
+  preview, and the exact file manifest. “确认并推送” / “仅确认，不推送” run the
+  existing Publisher transaction; “取消发布” leaves everything untouched. If a
+  push fails, the local publication commit is retained and can be pushed
+  manually after fixing remote access.
+- The studio client is bundled by esbuild into an OS-temporary directory at
+  startup; nothing studio-related enters the production `dist/` build.
+
+Run `npm run studio:test` for the studio test suite. The CLI publisher
+(`publish:current` / `publish:pending`) remains fully supported.

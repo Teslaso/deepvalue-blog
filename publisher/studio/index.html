@@ -5,12 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <title>Deep Value 写作台</title>
+    <link rel="stylesheet" href="/_studio/assets/studio.css">
   </head>
   <body>
-    <main data-testid="studio-shell">
-      <h1>Deep Value 写作台</h1>
-      <p>正在加载本地写作环境。</p>
+    <main data-testid="studio-shell" class="studio-shell" data-mobile-panel="editor">
+      <header class="studio-topbar">
+        <span class="studio-brand">Deep Value 写作台</span>
+        <span data-testid="current-path" class="studio-topbar__path">未打开文档</span>
+        <span data-testid="save-status" class="studio-save-status" role="status" aria-live="polite"></span>
+        <span class="studio-topbar__spacer"></span>
+        <button type="button" data-testid="save-document" class="studio-button">保存</button>
+        <button type="button" data-testid="prepare-publish" class="studio-button studio-button--primary" disabled>准备发布</button>
+      </header>
+
+      <nav class="studio-mobile-tabs" aria-label="面板切换">
+        <button type="button" data-testid="tab-documents" data-panel-button="documents" aria-selected="false">文章</button>
+        <button type="button" data-testid="tab-editor" data-panel-button="editor" aria-selected="true">编辑</button>
+        <button type="button" data-testid="tab-preview" data-panel-button="preview" aria-selected="false">预览</button>
+      </nav>
+
+      <div class="studio-grid">
+        <aside class="studio-panel studio-panel--documents" data-panel="documents" aria-label="文档列表">
+          <div class="studio-panel__section">
+            <label class="studio-field">
+              <span class="studio-field__label">工作区</span>
+              <select data-testid="workspace-select" aria-label="工作区"></select>
+            </label>
+            <label class="studio-field">
+              <span class="studio-field__label">搜索</span>
+              <input type="search" data-testid="document-search" aria-label="搜索文档" placeholder="文件名 / 标题 / 标签">
+            </label>
+            <div class="studio-panel__row">
+              <label class="studio-field studio-field--inline">
+                <span class="studio-field__label">状态</span>
+                <select data-testid="status-filter" aria-label="状态筛选">
+                  <option value="">全部</option>
+                  <option value="draft">草稿</option>
+                  <option value="ready">待发布</option>
+                  <option value="published">已发布</option>
+                  <option value="modified">已修改</option>
+                  <option value="invalid">元数据有误</option>
+                </select>
+              </label>
+              <button type="button" data-testid="create-document" class="studio-button">新建文章</button>
+            </div>
+          </div>
+          <ul data-testid="document-list" class="studio-document-list"></ul>
+        </aside>
+
+        <section class="studio-panel studio-panel--editor" data-panel="editor" aria-label="编辑器">
+          <div class="studio-editor-head">
+            <span data-testid="editor-path" class="studio-editor-head__path">未打开文档</span>
+            <span data-testid="editor-word-count" class="studio-editor-head__meta"></span>
+          </div>
+          <details data-testid="metadata-panel" class="studio-metadata" open>
+            <summary>发布元数据</summary>
+            <form data-testid="metadata-form" class="studio-metadata__form"></form>
+            <ul data-testid="metadata-diagnostics" class="studio-diagnostics" role="status" aria-live="polite"></ul>
+          </details>
+          <div data-testid="markdown-editor" class="studio-editor-host"></div>
+        </section>
+
+        <section class="studio-panel studio-panel--preview" data-panel="preview" aria-label="即时预览">
+          <div class="studio-preview-head">
+            <span class="studio-preview-head__title">即时预览</span>
+            <span class="studio-preview-head__controls" role="group" aria-label="预览宽度">
+              <button type="button" data-testid="preview-width-desktop" data-width="desktop" aria-pressed="true">桌面</button>
+              <button type="button" data-testid="preview-width-narrow" data-width="narrow" aria-pressed="false">窄屏</button>
+            </span>
+          </div>
+          <div class="studio-preview-body">
+            <article data-testid="instant-preview" class="studio-preview-canvas" data-width="desktop" aria-live="polite"></article>
+            <nav class="studio-outline" aria-label="大纲">
+              <span class="studio-outline__title">大纲</span>
+              <ul data-testid="preview-outline"></ul>
+            </nav>
+          </div>
+        </section>
+      </div>
+
+      <footer class="studio-statusbar" data-testid="status-bar" role="status" aria-live="polite">
+        <span data-testid="status-path"></span>
+        <span data-testid="status-words"></span>
+        <span data-testid="status-saved-at"></span>
+        <span data-testid="status-preview"></span>
+        <span data-testid="status-diagnostics"></span>
+        <span data-testid="status-transaction"></span>
+      </footer>
+
+      <div data-testid="conflict-dialog" class="studio-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="conflict-title">
+        <div class="studio-dialog__card">
+          <h2 id="conflict-title">检测到外部修改</h2>
+          <p>磁盘上的文件已被其他程序修改。自动保存已停止，浏览器中的内容仍然保留。</p>
+          <dl class="studio-dialog__fingerprints">
+            <div><dt>磁盘版本指纹</dt><dd><code data-testid="conflict-disk-fingerprint"></code></dd></div>
+            <div><dt>网页版本指纹</dt><dd><code data-testid="conflict-browser-fingerprint"></code></dd></div>
+          </dl>
+          <div data-testid="conflict-compare" class="studio-compare" hidden>
+            <div>
+              <h3>磁盘版本</h3>
+              <pre data-testid="conflict-disk-source"></pre>
+            </div>
+            <div>
+              <h3>网页版本</h3>
+              <pre data-testid="conflict-browser-source"></pre>
+            </div>
+          </div>
+          <div class="studio-dialog__actions">
+            <button type="button" data-testid="conflict-reload" class="studio-button">重新载入磁盘版本</button>
+            <button type="button" data-testid="conflict-compare-toggle" class="studio-button">打开对比</button>
+            <button type="button" data-testid="conflict-keep-browser" class="studio-button studio-button--danger">保留网页版本</button>
+          </div>
+        </div>
+      </div>
+
+      <div data-testid="publish-review" class="studio-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="publish-title">
+        <div class="studio-dialog__card studio-dialog__card--wide">
+          <h2 id="publish-title">发布复核</h2>
+          <p>目标路由：<code data-testid="publish-route"></code></p>
+          <iframe data-testid="publish-frame" class="studio-publish-frame" sandbox="allow-same-origin" title="最终发布预览"></iframe>
+          <h3>待发布笔记</h3>
+          <ul data-testid="publish-notes" class="studio-manifest"></ul>
+          <h3>文件与差异清单</h3>
+          <ul data-testid="publish-files" class="studio-manifest"></ul>
+          <ul data-testid="publish-diagnostics" class="studio-diagnostics" role="status" aria-live="polite"></ul>
+          <p data-testid="publish-result" class="studio-publish-result" role="status" aria-live="polite"></p>
+          <div class="studio-dialog__actions">
+            <button type="button" data-testid="publish-confirm-push" class="studio-button studio-button--primary">确认并推送</button>
+            <button type="button" data-testid="publish-confirm-local" class="studio-button">仅确认，不推送</button>
+            <button type="button" data-testid="publish-cancel" class="studio-button">取消发布</button>
+          </div>
+        </div>
+      </div>
+
+      <div data-testid="toast" class="studio-toast" role="status" aria-live="polite" hidden></div>
     </main>
     <script id="studio-data" type="application/json">__STUDIO_DATA__</script>
+    <script type="module" src="/_studio/assets/studio.js"></script>
   </body>
 </html>

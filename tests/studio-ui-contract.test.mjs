@@ -104,7 +104,8 @@ test('stylesheet carries the confirmed Deep Value tokens and mobile breakpoint',
 
 test('preview centers the reading column and keeps the outline as a separate rail', () => {
   assert.match(styles, /\.studio-panel--preview\s*\{\s*container-type:\s*inline-size;/u);
-  assert.match(styles, /\.studio-preview-body\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) 160px;/u);
+  assert.match(styles, /\.studio-preview-body\s*\{[^}]*grid-template-columns:\s*minmax\(0, 47rem\) 200px;/u);
+  assert.match(styles, /\.studio-preview-body\s*\{[^}]*justify-content:\s*center;/u);
   assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*margin:\s*0 auto;/u);
   assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*max-width:\s*47rem;/u);
   assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*padding:\s*0 24px;/u);

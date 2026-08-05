@@ -151,7 +151,7 @@ body {
   border-right: var(--line);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .studio-panel--preview {
@@ -267,6 +267,10 @@ body {
 }
 
 .studio-metadata {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 45%;
+  overflow-y: auto;
   border-bottom: var(--line);
   padding: 8px 0;
 }
@@ -337,7 +341,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 24rem;
+  min-height: 0;
 }
 
 .dv-markdown-toolbar {
@@ -423,8 +427,9 @@ body {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 47rem) 200px;
+  justify-content: center;
+  gap: 12px;
   padding-top: 12px;
 }
 

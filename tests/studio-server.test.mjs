@@ -706,6 +706,33 @@ test('API errors map to stable statuses without leaking note bodies, physical pa
   }
 });
 
+test('a push failure keeps the local commit message without leaking the retained commit or remote details', async (t) => {
+  const { studio, state } = await startFixture(t, {
+    moduleOverrides: {
+      createStudioPublisher: () => ({
+        prepare: async () => {
+          throw Object.assign(new Error('not reached'), { code: 'internal_error' });
+        },
+        confirm: async () => {
+          throw Object.assign(new Error('push rejected by remote: fatal: could not read Username'),
+            { code: 'push_failed' });
+        },
+        cancel: async () => ({ canceled: true }),
+      }),
+    },
+  });
+
+  const response = await apiJson(studio, state.token, '/_studio/api/publish/confirm', {
+    method: 'POST',
+    body: { transactionId: 'transaction-alpha', push: true },
+  });
+  assert.equal(response.response.status, 500);
+  assert.equal(response.json.error.code, 'push_failed');
+  assert.match(response.json.error.message, /committed/u);
+  assert.match(response.json.error.message, /push/u);
+  assert.doesNotMatch(JSON.stringify(response.json), /Username|not reached|commitSha|fatal/u);
+});
+
 test('a real preparation external-change error remains a recoverable 409 conflict', async (t) => {
   const secret = '/private/vault/Research/Alpha.md changed';
   const { studio, state } = await startFixture(t, {

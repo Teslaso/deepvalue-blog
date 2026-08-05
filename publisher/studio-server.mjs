@@ -438,6 +438,12 @@ function publicError(error) {
       body: { error: { code: 'request_too_large', message: 'Request too large' } },
     };
   }
+  if (code === 'push_failed') {
+    return {
+      status: 500,
+      body: { error: { code: 'push_failed', message: 'Publication committed locally, but push failed' } },
+    };
+  }
   if ([
     'invalid_alt',
     'invalid_attachment',

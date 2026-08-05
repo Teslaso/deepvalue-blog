@@ -6,11 +6,11 @@ import { getPublishedEntries } from '../../lib/entries.mjs';
 const entries = await getPublishedEntries({ domain: 'beyond' });
 
 const sections = [
-  { href: '/beyond/', label: '全部' },
-  { href: '/beyond/?section=life', label: '生活观察' },
-  { href: '/beyond/?section=reading', label: '阅读与思考' },
-  { href: '/beyond/?section=projects', label: '个人项目' },
-  { href: '/beyond/?section=other', label: '其他探索' },
+  { href: '/beyond/', label: '全部', i18nKey: 'publication.all' },
+  { href: '/beyond/?section=life', label: '生活观察', i18nKey: 'section.life' },
+  { href: '/beyond/?section=reading', label: '阅读与思考', i18nKey: 'section.reading' },
+  { href: '/beyond/?section=projects', label: '个人项目', i18nKey: 'section.projects' },
+  { href: '/beyond/?section=other', label: '其他探索', i18nKey: 'section.other' },
 ];
 ---
 
@@ -21,34 +21,35 @@ const sections = [
       <span>03 / LOWER EMPHASIS</span>
     </div>
     <div class="publication-copy">
-      <h1>边界之外</h1>
-      <p class="publication-description">
+      <h1 data-i18n="publication.beyondTitle">边界之外</h1>
+      <p class="publication-description" data-i18n="publication.beyondDescription">
         收录不以投资或 AI 为主要对象的生活观察、阅读思考、个人项目与其他兴趣，保留专业研究之外的必要余地。
       </p>
     </div>
   </header>
 
   <nav class="section-index" data-section-index aria-label="边界之外栏目">
-    <p>SECTION INDEX</p>
+    <p data-i18n="publication.sectionIndex">SECTION INDEX</p>
     <ol>
       {sections.map(section => (
-        <li><a href={section.href}>{section.label}</a></li>
+        <li><a href={section.href} data-i18n={section.i18nKey}>{section.label}</a></li>
       ))}
     </ol>
   </nav>
 
   <aside class="project-directory" aria-labelledby="project-directory-title">
     <div>
-      <p>PROJECTS &amp; TOOLS</p>
-      <h2 id="project-directory-title">项目与工具</h2>
-      <span>独立浏览投资分析工具、交易研究系统与 AI 应用实践。</span>
+      <p data-i18n="publication.beyondProjectTitle">PROJECTS &amp; TOOLS</p>
+      <h2 id="project-directory-title" data-i18n="publication.beyondProjectTitle">项目与工具</h2>
+      <span data-i18n="publication.beyondProjectBody">独立浏览投资分析工具、交易研究系统与 AI 应用实践。</span>
     </div>
-    <a href="/projects/">进入项目目录 <span aria-hidden="true">→</span></a>
+    <a href="/projects/" data-i18n="publication.enterProjects">进入项目目录 <span aria-hidden="true">→</span></a>
   </aside>
 
   <EntryList
     entries={entries}
     emptyText="边界之外暂时没有已发布内容；相关记录会在发布后出现在这里。"
+    emptyTextKey="publication.beyondEmpty"
     groupByFormat
   />
 </Base>

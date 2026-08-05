@@ -1,6 +1,11 @@
 ---
 import '@fontsource/space-mono/400.css';
 import '@fontsource/space-mono/700.css';
+import {
+  ENGLISH_DESCRIPTIONS,
+  ENGLISH_TITLES,
+  ENGLISH_TRANSLATIONS,
+} from '../lib/i18n.mjs';
 
 interface Props {
   title: string;
@@ -10,46 +15,72 @@ interface Props {
 const { title, description } = Astro.props;
 const currentPath = Astro.url.pathname;
 const isHome = currentPath === '/';
+const fallbackDescription = description || 'Deep Value 以投资、交易与大宗商品研究为核心。';
+
+const localeHref = (locale: 'zh' | 'en') => {
+  const url = new URL(Astro.url);
+  if (locale === 'en') url.searchParams.set('lang', 'en');
+  else url.searchParams.delete('lang');
+  return `${url.pathname}${url.search}`;
+};
 
 const navItems = [
-  { href: '/investment/', label: '投资研究' },
-  { href: '/ai/', label: 'AI 与技术' },
-  { href: '/archive/', label: '档案' },
-  { href: '/about/', label: '关于' },
+  { href: '/investment/', key: 'nav.investment', label: '投资研究' },
+  { href: '/ai/', key: 'nav.ai', label: 'AI 与技术' },
+  { href: '/archive/', key: 'nav.archive', label: '档案' },
+  { href: '/about/', key: 'nav.about', label: '关于' },
 ];
+
+const translationPayload = JSON.stringify({
+  translations: ENGLISH_TRANSLATIONS,
+  titles: ENGLISH_TITLES,
+  descriptions: ENGLISH_DESCRIPTIONS,
+});
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-site-locale="zh">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content={description || 'Deep Value 以投资、交易与大宗商品研究为核心。'}
+      content={fallbackDescription}
+      data-i18n-description={fallbackDescription}
     />
     <meta name="theme-color" content="#0b0c0b" />
-    <title>{title}</title>
+    <title data-i18n-title={title}>{title}</title>
   </head>
   <body class:list={{ 'home-page': isHome }}>
-    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <a class="skip-link" href="#main-content" data-i18n="site.skip">跳到主要内容</a>
 
     <header class="site-header">
       <div class="header-inner">
-        <a href="/" class="wordmark" aria-label="Deep Value Research 首页">
+        <a href="/" class="wordmark" data-i18n-aria-label="site.homeAria" aria-label="Deep Value Research 首页">
           Deep Value Research
         </a>
-        <span class="edition">Independent research publication</span>
-        <nav aria-label="主导航">
+        <span class="edition" data-i18n="site.edition">Independent research publication</span>
+        <nav data-i18n-aria-label="site.mainNav" aria-label="主导航">
           {navItems.map(item => (
             <a
               href={item.href}
               class="nav-link"
+              data-i18n={item.key}
               aria-current={currentPath.startsWith(item.href) ? 'page' : undefined}
             >
               {item.label}
             </a>
           ))}
+          <div class="language-switcher" data-i18n-aria-label="site.language" role="group" aria-label="语言">
+            <a
+              class="language-link"
+              data-locale-link="zh"
+              href={localeHref('zh')}
+              aria-current="page"
+            >中文</a>
+            <span aria-hidden="true">/</span>
+            <a class="language-link" data-locale-link="en" href={localeHref('en')}>EN</a>
+          </div>
         </nav>
       </div>
     </header>
@@ -62,8 +93,8 @@ const navItems = [
       <div class="footer-inner">
         <p class="footer-wordmark">Deep Value</p>
         <div class="footer-meta">
-          <span>Independent research publication</span>
-          <span>Investment · Commodities · AI</span>
+          <span data-i18n="site.edition">Independent research publication</span>
+          <span data-i18n="site.footerFocus">Investment · Commodities · AI</span>
           <div class="footer-links">
             <a href="mailto:mingxuantrading@foxmail.com">Email</a>
             <a href="https://github.com/MXmingxuan" target="_blank" rel="noreferrer">GitHub</a>
@@ -74,6 +105,68 @@ const navItems = [
     </footer>
   </body>
 </html>
+
+<script define:vars={{ translationPayload }}>
+  const { translations, titles, descriptions } = JSON.parse(translationPayload);
+  const localeParameter = new URLSearchParams(window.location.search).get('lang');
+  const savedLocale = window.localStorage.getItem('deepvalue-locale');
+  const locale = localeParameter === 'en' || localeParameter === 'zh'
+    ? localeParameter
+    : savedLocale === 'en'
+      ? 'en'
+      : 'zh';
+
+  document.documentElement.dataset.siteLocale = locale;
+  document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN';
+
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    const key = element.dataset.i18n;
+    if (!key) return;
+    const original = element.dataset.i18nZh || element.textContent.trim();
+    element.dataset.i18nZh = original;
+    element.textContent = locale === 'en' ? (translations[key] || original) : original;
+  });
+
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
+    const key = element.dataset.i18nAriaLabel;
+    if (!key) return;
+    const original = element.dataset.i18nAriaLabelZh || element.getAttribute('aria-label') || '';
+    element.dataset.i18nAriaLabelZh = original;
+    element.setAttribute('aria-label', locale === 'en' ? (translations[key] || original) : original);
+  });
+
+  const titleElement = document.querySelector('title[data-i18n-title]');
+  if (titleElement) {
+    const originalTitle = titleElement.dataset.i18nTitle || titleElement.textContent || '';
+    titleElement.dataset.i18nTitle = originalTitle;
+    titleElement.textContent = locale === 'en' ? (titles[originalTitle] || originalTitle) : originalTitle;
+  }
+
+  const descriptionElement = document.querySelector('meta[data-i18n-description]');
+  if (descriptionElement) {
+    const originalDescription = descriptionElement.dataset.i18nDescription || descriptionElement.content;
+    descriptionElement.dataset.i18nDescription = originalDescription;
+    descriptionElement.content = locale === 'en'
+      ? (descriptions[originalDescription] || originalDescription)
+      : originalDescription;
+  }
+
+  document.querySelectorAll('[data-locale-link]').forEach(link => {
+    const isCurrent = link.dataset.localeLink === locale;
+    if (isCurrent) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+    link.addEventListener('click', () => {
+      window.localStorage.setItem('deepvalue-locale', link.dataset.localeLink || 'zh');
+    });
+  });
+
+  document.querySelectorAll('a[href^="/"]:not([data-locale-link])').forEach(link => {
+    const url = new URL(link.getAttribute('href'), window.location.href);
+    if (locale === 'en') url.searchParams.set('lang', 'en');
+    else url.searchParams.delete('lang');
+    link.setAttribute('href', `${url.pathname}${url.search}${url.hash}`);
+  });
+</script>
 
 <style is:global>
   :root {
@@ -306,6 +399,31 @@ const navItems = [
     padding-right: 3.2vw;
   }
 
+  .language-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: 2rem;
+    color: var(--text-inverse-muted);
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  .language-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: inherit;
+  }
+
+  .language-link:hover,
+  .language-link:focus-visible,
+  .language-link[aria-current="page"] {
+    color: var(--text-inverse);
+  }
+
   .nav-link {
     position: relative;
     display: inline-flex;
@@ -492,6 +610,10 @@ const navItems = [
       margin-left: 0.85rem;
       letter-spacing: 0.03em;
     }
+
+    .language-switcher {
+      margin-left: 1.35rem;
+    }
   }
 
   @media (max-width: 860px) {
@@ -544,6 +666,12 @@ const navItems = [
     .nav-link::after {
       right: 0.65rem;
       left: 0.65rem;
+    }
+
+    .language-switcher {
+      margin-left: 0.85rem;
+      padding-left: 0.85rem;
+      border-left: 1px solid var(--border-subtle-inverse);
     }
 
     main {

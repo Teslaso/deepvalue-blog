@@ -60,8 +60,12 @@ const metadata = [
   post.data.updated_at && { label: 'UPDATED', value: metadataDateFormatter.format(post.data.updated_at) },
   post.data.section && { label: 'SECTION', value: post.data.section },
   post.data.topic && { label: 'TOPIC', value: post.data.topic },
-  { label: 'SOURCE', value: sourceLabels[post.data.source_type] },
-  post.data.confidence && { label: 'CONFIDENCE', value: confidenceLabels[post.data.confidence] },
+  { label: 'SOURCE', value: sourceLabels[post.data.source_type], i18nKey: `source.${post.data.source_type}` },
+  post.data.confidence && {
+    label: 'CONFIDENCE',
+    value: confidenceLabels[post.data.confidence],
+    i18nKey: `confidence.${post.data.confidence}`,
+  },
 ].filter(Boolean);
 
 const taxonomyGroups = [
@@ -73,15 +77,15 @@ const taxonomyGroups = [
 ---
 
 <Base title={`${post.data.title} - Deep Value Research`} description={post.data.summary}>
-  <nav class="back-navigation is-top" aria-label="返回内容索引">
-    <a href={backHref}><span aria-hidden="true">←</span>{backLabel}</a>
+  <nav class="back-navigation is-top" data-i18n-aria-label="detail.contentIndex" aria-label="返回内容索引">
+    <a href={backHref}><span aria-hidden="true">←</span><span data-i18n={isLog ? 'detail.backLogs' : 'detail.backArticles'}>{backLabel}</span></a>
   </nav>
 
   <article class:list={['research-entry', { 'is-log': isLog }]}>
     <header class="research-entry-header">
       <div class="article-lead">
         <p class="article-domain">
-          <span>{domainLabels[post.data.domain]}</span>
+          <span data-i18n={`domain.${post.data.domain}`}>{domainLabels[post.data.domain]}</span>
           {post.data.topic && <span>{post.data.topic}</span>}
           <time datetime={post.data.published_at.toISOString()}>
             {metadataDateFormatter.format(post.data.published_at)}
@@ -96,21 +100,21 @@ const taxonomyGroups = [
       <Content />
     </div>
 
-    <footer class="article-notes" aria-label="文章补充信息">
+    <footer class="article-notes" data-i18n-aria-label="detail.articleNotes" aria-label="文章补充信息">
       {post.data.thesis && (
         <section class="thesis-block" aria-labelledby="thesis-title">
-          <p id="thesis-title">THESIS / 核心判断</p>
+          <p id="thesis-title" data-i18n="detail.thesis">THESIS / 核心判断</p>
           <p>{post.data.thesis}</p>
         </section>
       )}
 
       <section class="article-information" aria-labelledby="article-information-title">
-        <p id="article-information-title">ARTICLE INFORMATION / 文章信息</p>
+        <p id="article-information-title" data-i18n="detail.articleInformation">ARTICLE INFORMATION / 文章信息</p>
         <dl class="metadata-grid">
           {metadata.map(item => (
             <div>
               <dt>{item.label}</dt>
-              <dd>{item.value}</dd>
+            <dd data-i18n={item.i18nKey}>{item.value}</dd>
             </div>
           ))}
         </dl>
@@ -140,9 +144,9 @@ const taxonomyGroups = [
     </footer>
   </article>
 
-  <nav class="back-navigation is-bottom" aria-label="返回内容索引">
-    <a href={backHref}><span aria-hidden="true">←</span>{backLabel}</a>
-    <a href="#main-content">回到顶部<span aria-hidden="true">↑</span></a>
+  <nav class="back-navigation is-bottom" data-i18n-aria-label="detail.contentIndex" aria-label="返回内容索引">
+    <a href={backHref}><span aria-hidden="true">←</span><span data-i18n={isLog ? 'detail.backLogs' : 'detail.backArticles'}>{backLabel}</span></a>
+    <a href="#main-content"><span data-i18n="detail.backToTop">回到顶部</span><span aria-hidden="true">↑</span></a>
   </nav>
 </Base>
 

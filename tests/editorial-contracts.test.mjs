@@ -57,6 +57,35 @@ test('homepage places the commodity manifesto between the hero and investment re
   assert.match(homepage, /我喜欢大宗商品，因为它离真实世界足够近。/u);
 });
 
+test('Base exposes an accessible locale switcher and shared translation runtime', async () => {
+  const layout = await source('src/layouts/Base.astro');
+
+  assert.match(layout, /data-locale-link="zh"/u);
+  assert.match(layout, /data-locale-link="en"/u);
+  assert.match(layout, /deepvalue-locale/u);
+  assert.match(layout, /data-i18n="site.skip"/u);
+  assert.match(layout, /ENGLISH_TRANSLATIONS/u);
+});
+
+test('public index and detail pages mark structural copy for translation', async () => {
+  const pageMarkers = [
+    ['src/pages/investment/index.astro', 'publication.investmentTitle'],
+    ['src/pages/ai/index.astro', 'publication.aiTitle'],
+    ['src/pages/archive/index.astro', 'publication.archiveTitle'],
+    ['src/pages/projects/index.astro', 'publication.projectsTitle'],
+    ['src/pages/beyond/index.astro', 'publication.beyondTitle'],
+    ['src/pages/blog/index.astro', 'publication.blogTitle'],
+    ['src/pages/research-log/index.astro', 'publication.logTitle'],
+    ['src/pages/blog/[slug].astro', 'detail.articleInformation'],
+    ['src/components/EntryList.astro', 'entry.readArticle'],
+  ];
+
+  for (const [path, key] of pageMarkers) {
+    const page = await source(path);
+    assert.ok(page.includes(key), `missing marker: ${path} / ${key}`);
+  }
+});
+
 test('dark surfaces use an accessible copper semantic token for small text', async () => {
   const layout = await source('src/layouts/Base.astro');
   const homepage = await source('src/pages/index.astro');

@@ -5,6 +5,10 @@ import { test, before } from 'node:test';
 
 const repositoryRoot = new URL('../', import.meta.url);
 
+function visibleHtml(html) {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, '');
+}
+
 before(() => {
   execFileSync('npm', ['run', 'build'], {
     cwd: repositoryRoot,
@@ -14,9 +18,10 @@ before(() => {
 
 test('homepage proceeds from the hero to the article list without a featured-research module', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
+  const visible = visibleHtml(html);
 
-  assert.doesNotMatch(html, /FEATURED RESEARCH|重点研究|Published research/);
-  assert.match(html, /INVESTMENT RESEARCH/);
+  assert.doesNotMatch(visible, /FEATURED RESEARCH|重点研究|Published research/);
+  assert.match(visible, /INVESTMENT RESEARCH/);
 });
 
 test('homepage presents three distinct practices and the approved introduction', () => {
@@ -32,14 +37,26 @@ test('homepage presents three distinct practices and the approved introduction',
   );
 });
 
+test('homepage and About page expose structural English translation markers', () => {
+  const homepage = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
+  const about = readFileSync(new URL('../src/pages/about/index.astro', import.meta.url), 'utf8');
+
+  assert.match(homepage, /data-i18n="home.manifestoTitle"/u);
+  assert.match(homepage, /data-i18n="home.manifestoP1"/u);
+  assert.match(homepage, /data-i18n="home.manifestoP4"/u);
+  assert.match(about, /data-i18n="about.positioningTitle"/u);
+  assert.match(about, /data-i18n="about.formatNote"/u);
+});
+
 test('public navigation and homepage omit dormant journal, boundary, and editorial-method surfaces', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
+  const visible = visibleHtml(html);
 
-  assert.doesNotMatch(html, /href="\/research-log\/"/);
-  assert.doesNotMatch(html, /href="\/beyond\/"/);
-  assert.doesNotMatch(html, /RESEARCH LOG|研究日志/);
-  assert.doesNotMatch(html, /BEYOND THE BOUNDARY|边界之外/);
-  assert.doesNotMatch(html, /Editorial method|把判断放回证据/);
+  assert.doesNotMatch(visible, /href="\/research-log\/"/);
+  assert.doesNotMatch(visible, /href="\/beyond\/"/);
+  assert.doesNotMatch(visible, /RESEARCH LOG|研究日志/);
+  assert.doesNotMatch(visible, /BEYOND THE BOUNDARY|边界之外/);
+  assert.doesNotMatch(visible, /Editorial method|把判断放回证据/);
 });
 
 test('article pages put the title before secondary research metadata and move notes after the body', () => {

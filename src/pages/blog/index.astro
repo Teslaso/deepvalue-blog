@@ -21,21 +21,21 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
       <span>DURABLE CONCLUSIONS</span>
     </div>
     <div class="article-index-copy">
-      <h1>研究文章</h1>
-      <p>按领域、专题和时间沉淀可复用的研究结论，尽量保留核心假设、证据边界和后续证伪条件。</p>
+      <h1 data-i18n="publication.blogTitle">研究文章</h1>
+      <p data-i18n="publication.blogDescription">按领域、专题和时间沉淀可复用的研究结论，尽量保留核心假设、证据边界和后续证伪条件。</p>
     </div>
   </header>
 
   <div class="article-index-layout" data-entry-filter-scope>
-    <aside class="domain-filter" aria-label="按领域筛选文章">
-      <p>DOMAIN FILTER</p>
+    <aside class="domain-filter" data-i18n-aria-label="filters.byDomain" aria-label="按领域筛选文章">
+      <p data-i18n="filters.domain">DOMAIN FILTER</p>
       <div>
         <button type="button" class="is-active" data-domain-filter="all" aria-pressed="true">
-          <span>00</span>全部
+          <span>00</span><span data-i18n="filters.all">全部</span>
         </button>
         {allDomains.map((domain, index) => (
           <button type="button" data-domain-filter={domain} aria-pressed="false">
-            <span>{String(index + 1).padStart(2, '0')}</span>{domainLabels[domain]}
+            <span>{String(index + 1).padStart(2, '0')}</span><span data-i18n={`domain.${domain}`}>{domainLabels[domain]}</span>
           </button>
         ))}
       </div>
@@ -44,8 +44,8 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
     <section class="article-index-list" aria-labelledby="article-list-title">
       <header>
         <div>
-          <p>ARTICLE INDEX</p>
-          <h2 id="article-list-title">全部文章</h2>
+          <p data-i18n="index.entryIndex">ARTICLE INDEX</p>
+          <h2 id="article-list-title" data-i18n="index.articleList">全部文章</h2>
         </div>
         <span>{String(sortedPosts.length).padStart(2, '0')} PUBLISHED</span>
       </header>
@@ -53,6 +53,7 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
       <EntryList
         entries={sortedPosts}
         emptyText="暂时没有已发布的研究文章。"
+        emptyTextKey="publication.blogEmpty"
       />
     </section>
   </div>

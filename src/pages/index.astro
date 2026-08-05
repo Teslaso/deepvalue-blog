@@ -28,21 +28,21 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
       <div class="hero-copy">
         <p class="eyebrow">INDUSTRY RESEARCH · TRADING · APPLIED AI</p>
         <h1 id="hero-title">
-          <span class="hero-title-line">产业研究</span>
-          <span class="hero-title-line">交易</span>
-          <span class="hero-title-line">AI 应用</span>
+          <span class="hero-title-line" data-i18n="home.heroTitleResearch">产业研究</span>
+          <span class="hero-title-line" data-i18n="home.heroTitleTrading">交易</span>
+          <span class="hero-title-line" data-i18n="home.heroTitleAI">AI 应用</span>
         </h1>
-        <p class="hero-intro">
+        <p class="hero-intro" data-i18n="home.heroIntro">
           关注周期行业与商品期货，记录产业研究、交易实践，以及 AI 对研究方法与日常生活的改变。
         </p>
         <div class="hero-actions">
-          <a class="text-link" href="/investment/">进入投资研究</a>
+          <a class="text-link" href="/investment/" data-i18n="home.heroCta">进入投资研究</a>
         </div>
       </div>
-      <aside class="hero-index" aria-label="研究范围">
-        <div class="hero-index-row"><span>01</span><span>产业研究</span></div>
-        <div class="hero-index-row"><span>02</span><span>市场与交易</span></div>
-        <div class="hero-index-row"><span>03</span><span>AI 应用</span></div>
+      <aside class="hero-index" data-i18n-aria-label="home.researchScope" aria-label="研究范围">
+        <div class="hero-index-row"><span>01</span><span data-i18n="home.indexResearch">产业研究</span></div>
+        <div class="hero-index-row"><span>02</span><span data-i18n="home.indexTrading">市场与交易</span></div>
+        <div class="hero-index-row"><span>03</span><span data-i18n="home.indexAI">AI 应用</span></div>
       </aside>
     </div>
   </section>
@@ -50,23 +50,23 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
     <div class="content-frame">
       <section class="manifesto" aria-labelledby="manifesto-heading">
         <div class="manifesto-label">
-          <p>WHY COMMODITIES</p>
+          <p data-i18n="home.manifestoLabel">WHY COMMODITIES</p>
           <span>01</span>
         </div>
         <div class="manifesto-content">
-          <h2 id="manifesto-heading">我喜欢大宗商品，因为它离真实世界足够近。</h2>
+          <h2 id="manifesto-heading" data-i18n="home.manifestoTitle">我喜欢大宗商品，因为它离真实世界足够近。</h2>
           <div class="manifesto-body">
-            <p>一块矿石从地下被开采，一船原油穿过海峡，一场暴雨落在南美的农田，一纸禁令改变港口的方向——国家、资本、战争、天气与人心，最终都在价格里留下痕迹。</p>
-            <p>这里没有被彻底整理好的世界。信息永远残缺，变化常常猝不及防，真正重要的东西又总藏在喧闹之下。研究大宗商品，就是走进这片混乱，辨认其中正在转移的力量，寻找决定变化的矛盾。</p>
-            <p>我所向往的，也不是无所畏惧的豪赌，而是一种清醒的冒险：尊重复杂，敬畏未知，在无法看清全部答案的时候，仍然努力形成判断；在机会真正出现时，敢于行动，也愿意承担判断的后果。</p>
-            <p>这个博客，记录的正是这种尝试——从价格出发，穿过数字与叙事，回到那个真实、粗粝而始终变化着的世界。</p>
+            <p data-i18n="home.manifestoP1">一块矿石从地下被开采，一船原油穿过海峡，一场暴雨落在南美的农田，一纸禁令改变港口的方向——国家、资本、战争、天气与人心，最终都在价格里留下痕迹。</p>
+            <p data-i18n="home.manifestoP2">这里没有被彻底整理好的世界。信息永远残缺，变化常常猝不及防，真正重要的东西又总藏在喧闹之下。研究大宗商品，就是走进这片混乱，辨认其中正在转移的力量，寻找决定变化的矛盾。</p>
+            <p data-i18n="home.manifestoP3">我所向往的，也不是无所畏惧的豪赌，而是一种清醒的冒险：尊重复杂，敬畏未知，在无法看清全部答案的时候，仍然努力形成判断；在机会真正出现时，敢于行动，也愿意承担判断的后果。</p>
+            <p data-i18n="home.manifestoP4">这个博客，记录的正是这种尝试——从价格出发，穿过数字与叙事，回到那个真实、粗粝而始终变化着的世界。</p>
           </div>
         </div>
       </section>
       <section class="investment-section" aria-labelledby="investment-heading">
         <div class="section-label">
-          <h2 id="investment-heading">INVESTMENT RESEARCH / 投资研究</h2>
-          <a href="/investment/">进入栏目</a>
+          <h2 id="investment-heading" data-i18n="home.investmentHeading">INVESTMENT RESEARCH / 投资研究</h2>
+          <a href="/investment/" data-i18n="home.sectionLink">进入栏目</a>
         </div>
         {investmentArticles.length > 0 ? (
           <ol class="investment-list">
@@ -102,14 +102,14 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
                   </a>
                 )}
                 <a class="row-link" href={`/blog/${entry.data.publish_id}`} aria-label={`阅读全文：${entry.data.title}`}>
-                  阅读全文
+                  <span data-i18n="home.readMore">阅读全文</span>
                 </a>
               </li>
             ))}
           </ol>
         ) : (
           <div class="section-empty">
-            <p>当前没有已发布的投资研究文章。</p>
+            <p data-i18n="home.investmentEmpty">当前没有已发布的投资研究文章。</p>
           </div>
         )}
       </section>
@@ -117,7 +117,7 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
         <section class="desk-module" aria-labelledby="ai-heading">
           <div class="module-heading">
             <span>02</span>
-            <h2 id="ai-heading">AI &amp; TECHNOLOGY / AI 与技术</h2>
+            <h2 id="ai-heading" data-i18n="home.aiHeading">AI &amp; TECHNOLOGY / AI 与技术</h2>
           </div>
           {aiEntries.length > 0 ? (
             <ol class="compact-list">
@@ -132,11 +132,11 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
             </ol>
           ) : (
             <div class="module-empty">
-              <p>这里收录 AI 应用、技术观察与研究工作流。当前尚无已发布内容。</p>
+              <p data-i18n="home.aiEmpty">这里收录 AI 应用、技术观察与研究工作流。当前尚无已发布内容。</p>
               <span>No published AI entries</span>
             </div>
           )}
-          <a class="module-link" href="/ai/">进入 AI 与技术</a>
+          <a class="module-link" href="/ai/" data-i18n="home.aiLink">进入 AI 与技术</a>
         </section>
       </div>
     </div>

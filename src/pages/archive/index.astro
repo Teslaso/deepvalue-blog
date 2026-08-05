@@ -13,8 +13,8 @@ const entries = await getPublishedEntries();
       <span>CHRONOLOGICAL INDEX</span>
     </div>
     <div class="publication-copy">
-      <h1>档案</h1>
-      <p class="publication-description">
+      <h1 data-i18n="publication.archiveTitle">档案</h1>
+      <p class="publication-description" data-i18n="publication.archiveDescription">
         按最近更新与首次发布日期排列全部已发布文章和研究日志。这里提供紧凑的时间索引，不展示草稿或归档状态内容。
       </p>
     </div>
@@ -23,8 +23,8 @@ const entries = await getPublishedEntries();
   <section class="chronological-index" aria-labelledby="archive-index-title">
     <header>
       <div>
-        <p>PUBLICATION RECORD</p>
-        <h2 id="archive-index-title">已发布内容</h2>
+        <p data-i18n="index.archiveRecord">PUBLICATION RECORD</p>
+        <h2 id="archive-index-title" data-i18n="publication.archivePublished">已发布内容</h2>
       </div>
       <span>{String(entries.length).padStart(2, '0')} ENTRIES</span>
     </header>
@@ -32,6 +32,7 @@ const entries = await getPublishedEntries();
     <EntryList
       entries={entries}
       emptyText="档案暂时为空；已发布的文章和研究日志会按时间出现在这里。"
+      emptyTextKey="publication.archiveEmpty"
       compact
     />
   </section>

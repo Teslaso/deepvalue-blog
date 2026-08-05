@@ -4,6 +4,7 @@ import { effectiveEntryDate } from '../lib/entry-utils.mjs';
 const {
   entries,
   emptyText = '暂时没有已发布内容。',
+  emptyTextKey = 'entry.noContent',
   groupByFormat = false,
   compact = false,
 } = Astro.props;
@@ -52,13 +53,14 @@ const groups = groupByFormat
         <section
           class="entry-group"
           data-entry-group={group.id}
+          data-i18n-aria-label={group.label ? `entry.${group.id}Group` : 'entry.publishedContent'}
           aria-label={group.label || '已发布内容'}
         >
           {group.label && (
             <header class="entry-group-header">
               <div>
                 <p>{group.eyebrow}</p>
-                <h2>{group.label}</h2>
+                <h2 data-i18n={`entry.${group.id}Group`}>{group.label}</h2>
               </div>
               <span>{String(group.entries.length).padStart(2, '0')}</span>
             </header>
@@ -89,23 +91,29 @@ const groups = groupByFormat
                   </div>
 
                   <a class="entry-action" href={`/blog/${entry.data.publish_id}/`}>
-                    {entry.data.format === 'article' ? '阅读全文' : '查看日志'}
+                    <span data-i18n={entry.data.format === 'article' ? 'entry.readArticle' : 'entry.viewLog'}>
+                      {entry.data.format === 'article' ? '阅读全文' : '查看日志'}
+                    </span>
                     <span aria-hidden="true">↗</span>
                   </a>
                 </li>
               ))}
             </ol>
           ) : (
-            <p class="entry-empty entry-group-empty" data-group-empty>{group.emptyText}</p>
+            <p
+              class="entry-empty entry-group-empty"
+              data-group-empty
+              data-i18n={group.id === 'article' ? 'entry.noArticles' : 'entry.noLogs'}
+            >{group.emptyText}</p>
           )}
         </section>
       ))}
     </div>
   ) : (
-    <p class="entry-empty" data-unfiltered-empty>{emptyText}</p>
+    <p class="entry-empty" data-unfiltered-empty data-i18n={emptyTextKey}>{emptyText}</p>
   )}
 
-  <p class="entry-empty" data-filtered-empty hidden>此筛选条件下暂时没有已发布内容。</p>
+  <p class="entry-empty" data-filtered-empty hidden data-i18n="entry.noFilteredContent">此筛选条件下暂时没有已发布内容。</p>
 </div>
 
 <script>

@@ -64,20 +64,20 @@ const topics = [...new Set(entries.map(entry => entry.data.topic).filter(Boolean
       <span>CHRONOLOGICAL STREAM</span>
     </div>
     <div class="log-heading-copy">
-      <h1>研究日志</h1>
-      <p>
+      <h1 data-i18n="publication.logTitle">研究日志</h1>
+      <p data-i18n="publication.logDescription">
         按时间保留跨领域的观察、证据更新与判断变化。日志可以很短，也可以很长；区别在于它记录的是当时的研究状态，而不是篇幅。
       </p>
     </div>
   </header>
 
-  <nav class="log-filter-index" aria-label="研究日志筛选">
-    <p>FILTER STREAM</p>
+  <nav class="log-filter-index" data-i18n-aria-label="filters.filterStream" aria-label="研究日志筛选">
+    <p data-i18n="filters.filterStream">FILTER STREAM</p>
     <div>
-      <a href="/research-log/" data-log-filter-link>全部</a>
-      <a href="/research-log/?domain=investment" data-log-filter-link>投资研究</a>
-      <a href="/research-log/?domain=ai" data-log-filter-link>AI 与技术</a>
-      <a href="/research-log/?domain=beyond" data-log-filter-link>边界之外</a>
+      <a href="/research-log/" data-log-filter-link data-i18n="filters.all">全部</a>
+      <a href="/research-log/?domain=investment" data-log-filter-link data-i18n="filters.investment">投资研究</a>
+      <a href="/research-log/?domain=ai" data-log-filter-link data-i18n="filters.ai">AI 与技术</a>
+      <a href="/research-log/?domain=beyond" data-log-filter-link data-i18n="filters.beyond">边界之外</a>
       {topics.map(topic => (
         <a href={`/research-log/?topic=${encodeURIComponent(topic)}`} data-log-filter-link>#{topic}</a>
       ))}
@@ -87,7 +87,7 @@ const topics = [...new Set(entries.map(entry => entry.data.topic).filter(Boolean
   {logRows.length > 0 ? (
     <section class="log-stream" aria-labelledby="stream-title">
       <header class="stream-header">
-        <h2 id="stream-title">时间流</h2>
+        <h2 id="stream-title" data-i18n="index.logTime">时间流</h2>
         <span>{String(logRows.length).padStart(2, '0')} PUBLISHED</span>
       </header>
 
@@ -100,14 +100,14 @@ const topics = [...new Set(entries.map(entry => entry.data.topic).filter(Boolean
             data-topic={entry.data.topic || ''}
           >
             <time class="log-timestamp" datetime={entry.data.published_at.toISOString()}>
-              <span class="log-time-label">PUBLISHED / 发布</span>
+              <span class="log-time-label" data-i18n="index.publishedLog">PUBLISHED / 发布</span>
               <span>{dateFormatter.format(entry.data.published_at)}</span>
               <span>{timeFormatter.format(entry.data.published_at)}</span>
             </time>
 
             <article class="log-entry">
               <div class="log-metadata">
-                <span>{domainLabels[entry.data.domain]}</span>
+                <span data-i18n={`domain.${entry.data.domain}`}>{domainLabels[entry.data.domain]}</span>
                 {entry.data.topic && <span>{entry.data.topic}</span>}
                 {entry.data.section && <span>{entry.data.section}</span>}
               </div>
@@ -123,14 +123,14 @@ const topics = [...new Set(entries.map(entry => entry.data.topic).filter(Boolean
               ) : null}
 
               {entry.data.tags.length > 0 && (
-                <div class="log-hashtags" aria-label="标签">
+                <div class="log-hashtags" data-i18n-aria-label="filters.tags" aria-label="标签">
                   {entry.data.tags.map(tag => <span>#{tag}</span>)}
                 </div>
               )}
 
               {isLong && (
                 <a class="log-read-more" href={`/blog/${entry.data.publish_id}/`}>
-                  阅读全文 <span aria-hidden="true">↗</span>
+                  <span data-i18n="home.readMore">阅读全文</span> <span aria-hidden="true">↗</span>
                 </a>
               )}
             </article>
@@ -142,13 +142,13 @@ const topics = [...new Set(entries.map(entry => entry.data.topic).filter(Boolean
     <section class="log-empty" data-unfiltered-empty aria-labelledby="empty-log-title">
       <p>00 / NO PUBLISHED LOGS</p>
       <div>
-        <h2 id="empty-log-title">研究日志尚未发布</h2>
-        <p>已发布的研究日志会按时间顺序出现在这里，并保留领域、主题、标签和当时的判断。当前不以示例卡片填充。</p>
+        <h2 id="empty-log-title" data-i18n="index.noPublishedLogs">研究日志尚未发布</h2>
+        <p data-i18n="index.noPublishedLogsBody">已发布的研究日志会按时间顺序出现在这里，并保留领域、主题、标签和当时的判断。当前不以示例卡片填充。</p>
       </div>
     </section>
   )}
 
-  <p class="filtered-empty" data-filtered-empty hidden>此筛选条件下暂时没有已发布的研究日志。</p>
+  <p class="filtered-empty" data-filtered-empty hidden data-i18n="entry.noFilteredContent">此筛选条件下暂时没有已发布的研究日志。</p>
 </Base>
 
 <script>

@@ -736,14 +736,6 @@ export function createStudioUI({ root, api, editor }) {
         }
       });
     }
-    for (const button of view.querySelectorAll('[data-width]')) {
-      button.addEventListener('click', () => {
-        elements.preview.dataset.width = button.dataset.width;
-        for (const peer of view.querySelectorAll('[data-width]')) {
-          peer.setAttribute('aria-pressed', String(peer === button));
-        }
-      });
-    }
     view.addEventListener('studio:save', () => {
       clearTimeout(autosaveTimer);
       void saveActiveDocument();

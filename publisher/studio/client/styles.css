@@ -424,23 +424,22 @@ body {
 .studio-preview-body {
   flex: 1;
   min-height: 0;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
   gap: 12px;
   padding-top: 12px;
 }
 
 .studio-preview-canvas {
   overflow-y: auto;
-  flex: 0 1 47rem;
-  min-width: 0;
+  width: 100%;
   max-width: 47rem;
+  margin: 0 auto;
+  min-width: 0;
   padding: 0 24px;
   font-size: 16px;
   line-height: 1.75;
 }
-
-.studio-preview-canvas[data-width="narrow"] { max-width: 390px; }
 
 .studio-preview-canvas img { max-width: 100%; }
 
@@ -487,11 +486,10 @@ body {
 
 .studio-outline button:hover { color: var(--color-copper); }
 
-/* 大纲是独立右栏：文章与大纲作为一组在面板内居中，两侧留白对称，大纲不占用文章留白 */
+/* 大纲是独立右栏：固定贴住预览面板右缘，文章在左列内居中 */
 .studio-panel--preview { container-type: inline-size; }
 
 .studio-outline {
-  flex: 0 0 200px;
   min-height: 0;
   overflow-y: auto;
   border-left: var(--line);
@@ -501,6 +499,7 @@ body {
 /* 面板较窄时：大纲折叠到文章下方，文章独占整列居中 */
 @container (max-width: 959px) {
   .studio-preview-body {
+    display: flex;
     flex-direction: column;
     justify-content: flex-start;
     overflow-y: auto;
@@ -509,10 +508,10 @@ body {
   .studio-preview-canvas {
     flex: none;
     max-width: none;
+    margin: 0;
   }
 
   .studio-outline {
-    flex: none;
     width: 100%;
     border-left: 0;
     border-top: var(--line);

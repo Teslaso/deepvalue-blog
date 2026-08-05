@@ -314,7 +314,12 @@ test('every API route requires the session token while page and assets use a str
   assert.match(csp, /frame-src 'self'/u);
   assert.match(csp, /object-src 'none'/u);
   assert.match(csp, /script-src 'self'/u);
-  assert.doesNotMatch(csp, /unsafe-inline|https?:/u);
+  // CodeMirror 6 injects its base layout styles at runtime (style-mod), so the
+  // loopback-only studio page intentionally allows inline styles. External
+  // https images are allowed in previews for notes that reference CDN assets.
+  assert.match(csp, /style-src 'self' 'unsafe-inline'/u);
+  assert.match(csp, /img-src 'self' data: blob: https:/u);
+  assert.doesNotMatch(csp, /script-src [^;]*unsafe-inline/u);
 
   const asset = await fetch(new URL('/_studio/assets/app.js', studio.url));
   assert.equal(asset.status, 200);

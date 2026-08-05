@@ -39,10 +39,13 @@ const UI_CSP = [
   "frame-ancestors 'none'",
   "frame-src 'self'",
   "form-action 'self'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https:",
   "object-src 'none'",
   "script-src 'self'",
-  "style-src 'self'",
+  // CodeMirror 6 injects its base layout styles at runtime via style-mod, so
+  // inline styles must be allowed on the loopback-only, token-authenticated
+  // studio page (mirrors PREVIEW_CSP below).
+  "style-src 'self' 'unsafe-inline'",
 ].join('; ');
 
 const PREVIEW_CSP = [

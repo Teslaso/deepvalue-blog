@@ -363,9 +363,6 @@ body {
 .dv-markdown-editor__host {
   flex: 1;
   min-height: 0;
-  border: var(--line);
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.18);
 }
 
 .dv-markdown-editor .cm-editor {

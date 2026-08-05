@@ -405,17 +405,18 @@ body {
 .studio-preview-body {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr 160px;
-  gap: 16px;
+  position: relative;
   padding-top: 12px;
+  overflow: hidden;
 }
 
 .studio-preview-canvas {
   overflow-y: auto;
+  height: 100%;
   margin: 0 auto;
   width: 100%;
   max-width: 720px;
+  padding: 0 24px;
   font-size: 16px;
   line-height: 1.75;
 }
@@ -466,6 +467,45 @@ body {
 }
 
 .studio-outline button:hover { color: var(--color-copper); }
+
+/* 面板足够宽时：大纲作为右侧悬浮窄轨，文章在预览面板内水平居中 */
+.studio-panel--preview { container-type: inline-size; }
+
+.studio-outline {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  bottom: 0;
+  width: 160px;
+  overflow-y: auto;
+  border-left: var(--line);
+  padding-left: 12px;
+  background: var(--color-paper);
+}
+
+/* 面板较窄时：大纲折叠到文章下方，避免挤压文章居中的阅读区 */
+@container (max-width: 959px) {
+  .studio-preview-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .studio-preview-canvas {
+    height: auto;
+    flex: none;
+  }
+
+  .studio-outline {
+    position: static;
+    flex: none;
+    width: 100%;
+    border-left: 0;
+    border-top: var(--line);
+    padding: 8px 0 0;
+    margin-top: 16px;
+  }
+}
 
 /* 底栏 */
 .studio-statusbar {

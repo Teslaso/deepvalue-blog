@@ -97,6 +97,16 @@ test('stylesheet carries the confirmed Deep Value tokens and mobile breakpoint',
   assert.match(styles, /prefers-reduced-motion/u);
 });
 
+test('preview canvas centers in the panel and the outline folds below on narrow panels', () => {
+  assert.match(styles, /\.studio-panel--preview\s*\{\s*container-type:\s*inline-size;/u);
+  assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*margin:\s*0 auto;/u);
+  assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*padding:\s*0 24px;/u);
+  assert.match(styles, /\.studio-outline\s*\{[^}]*position:\s*absolute;[^}]*right:\s*0;/u);
+  assert.match(styles, /@container \(max-width: 959px\)/u);
+  const narrowBlock = styles.slice(styles.indexOf('@container (max-width: 959px)'));
+  assert.match(narrowBlock, /\.studio-outline\s*\{[^}]*position:\s*static;/u);
+});
+
 test('runStudio asset build emits the bundled client below the OS temp root', async (t) => {
   const assets = await buildStudioAssets();
   t.after(() => assets.cleanup());

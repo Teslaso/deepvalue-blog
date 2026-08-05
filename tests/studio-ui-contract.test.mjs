@@ -65,6 +65,8 @@ test('status containers are live regions and mobile tabs are real buttons', () =
 test('the Markdown body editor is labeled so its purpose is self-evident', () => {
   assert.match(shell, /class="studio-body-head"[^>]*>\s*<span>正文<\/span>\s*<span class="studio-body-head__hint">MARKDOWN<\/span>/u);
   assert.match(styles, /\.studio-body-head\s*\{/u);
+  assert.match(styles, /\.studio-metadata__form\s*\{[^}]*overflow-y:\s*auto;/u);
+  assert.match(styles, /\.studio-metadata__form\s*\{[^}]*max-height:\s*40vh;/u);
 });
 
 test('shell keeps the token placeholder and loads only same-origin bundled assets', () => {

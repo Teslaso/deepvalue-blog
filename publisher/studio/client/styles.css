@@ -269,13 +269,12 @@ body {
 .studio-metadata {
   flex: 0 1 auto;
   min-height: 0;
-  max-height: 45%;
-  overflow-y: auto;
   border-bottom: var(--line);
   padding: 8px 0;
 }
 
 .studio-metadata summary {
+  flex: none;
   font-family: var(--font-data);
   font-size: 13px;
   cursor: pointer;
@@ -304,6 +303,8 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
   padding-top: 8px;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
 .studio-metadata__form label {

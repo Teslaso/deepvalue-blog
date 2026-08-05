@@ -278,6 +278,23 @@ body {
   color: var(--color-copper);
 }
 
+.studio-body-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0 6px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--color-copper);
+  letter-spacing: 0.08em;
+}
+
+.studio-body-head__hint {
+  color: var(--color-olive);
+  letter-spacing: 0.06em;
+}
+
 .studio-metadata__form {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -405,17 +422,17 @@ body {
 .studio-preview-body {
   flex: 1;
   min-height: 0;
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 24px;
   padding-top: 12px;
-  overflow: hidden;
 }
 
 .studio-preview-canvas {
   overflow-y: auto;
-  height: 100%;
   margin: 0 auto;
   width: 100%;
-  max-width: 720px;
+  max-width: 47rem;
   padding: 0 24px;
   font-size: 16px;
   line-height: 1.75;
@@ -468,22 +485,17 @@ body {
 
 .studio-outline button:hover { color: var(--color-copper); }
 
-/* 面板足够宽时：大纲作为右侧悬浮窄轨，文章在预览面板内水平居中 */
+/* 大纲是独立右栏：文章在阅读区内水平居中，两侧留白对称，大纲不占用文章留白 */
 .studio-panel--preview { container-type: inline-size; }
 
 .studio-outline {
-  position: absolute;
-  top: 12px;
-  right: 0;
-  bottom: 0;
-  width: 160px;
+  min-height: 0;
   overflow-y: auto;
   border-left: var(--line);
   padding-left: 12px;
-  background: var(--color-paper);
 }
 
-/* 面板较窄时：大纲折叠到文章下方，避免挤压文章居中的阅读区 */
+/* 面板较窄时：大纲折叠到文章下方，文章独占整列居中 */
 @container (max-width: 959px) {
   .studio-preview-body {
     display: flex;
@@ -497,7 +509,6 @@ body {
   }
 
   .studio-outline {
-    position: static;
     flex: none;
     width: 100%;
     border-left: 0;

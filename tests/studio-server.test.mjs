@@ -504,6 +504,54 @@ test('conflict resolution requires stale and current disk fingerprints and reche
   assert.equal(staleDisk.response.status, 409);
 });
 
+test('conflict resolution accepts patch and body and forwards them through the frontmatter adapter', async (t) => {
+  const { studio, state, calls } = await startFixture(t);
+
+  const resolved = await apiJson(studio, state.token, '/_studio/api/document/resolve-conflict', {
+    method: 'PUT',
+    body: {
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      staleFingerprint: FINGERPRINT_B,
+      currentFingerprint: FINGERPRINT_A,
+      patch: { title: 'Browser 标题', publish: true },
+      body: 'Browser body',
+    },
+  });
+  assert.equal(resolved.response.status, 200);
+  const resolveSave = calls.filter(([name]) => name === 'save').at(-1)[1];
+  assert.equal(resolveSave.expectedFingerprint, FINGERPRINT_A);
+  assert.equal(resolveSave.patch.title, 'Browser 标题');
+  assert.equal(resolveSave.body, 'Browser body');
+  assert.equal(Object.hasOwn(resolveSave, 'force'), false);
+  assert.equal(Object.hasOwn(resolveSave, 'source'), false);
+
+  const bothForms = await apiJson(studio, state.token, '/_studio/api/document/resolve-conflict', {
+    method: 'PUT',
+    body: {
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      staleFingerprint: FINGERPRINT_A,
+      currentFingerprint: FINGERPRINT_B,
+      source: 'Raw source',
+      patch: { title: 'Browser 标题' },
+      body: 'Browser body',
+    },
+  });
+  assert.equal(bothForms.response.status, 400);
+
+  const noForm = await apiJson(studio, state.token, '/_studio/api/document/resolve-conflict', {
+    method: 'PUT',
+    body: {
+      workspaceId: 'research',
+      relativePath: 'Alpha.md',
+      staleFingerprint: FINGERPRINT_A,
+      currentFingerprint: FINGERPRINT_B,
+    },
+  });
+  assert.equal(noForm.response.status, 400);
+});
+
 test('prepare exposes only a same-origin final preview URL and confirm retires its preview root', async (t) => {
   const previewRoot = await makePreviewRoot(t);
   const { studio, state } = await startFixture(t, { previewRoot });

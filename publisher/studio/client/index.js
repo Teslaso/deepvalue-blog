@@ -48,6 +48,7 @@ function createApi(token) {
     }),
     createDocument: (input) => request('/document', { method: 'POST', json: input }),
     saveDocument: (input) => request('/document', { method: 'PUT', json: input }),
+    resolveConflict: (input) => request('/document/resolve-conflict', { method: 'PUT', json: input }),
     uploadAttachment: (file) => request('/attachment', {
       method: 'POST',
       body: file,

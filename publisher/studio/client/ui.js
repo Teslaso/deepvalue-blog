@@ -511,13 +511,15 @@ export function createStudioUI({ root, api, editor }) {
     );
     if (!approved) return;
     try {
-      // 携带磁盘最新指纹保存：服务端在覆盖前立即比对指纹（与 resolve-conflict
-      // 等价的最后关头校验），patch+body 序列化还能保留磁盘版本的未知 YAML 字段。
+      // 通过专用冲突解决端点提交：同时携带网页版本（stale）与磁盘最新版本
+      // （current）两个指纹，服务端在覆盖前再次比对磁盘指纹。patch+body 走
+      // frontmatter 适配器序列化，保留磁盘版本中表单未建模的未知 YAML 字段；
       // 指纹不匹配会再次返回 409 并重新进入冲突流程。
-      const { document: saved } = await api.saveDocument({
+      const { document: saved } = await api.resolveConflict({
         workspaceId: doc.workspaceId,
         relativePath: doc.relativePath,
-        expectedFingerprint: conflict.diskFingerprint,
+        staleFingerprint: conflict.staleFingerprint,
+        currentFingerprint: conflict.diskFingerprint,
         patch: readFormMetadata(),
         body: currentBody(),
       });

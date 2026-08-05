@@ -593,10 +593,26 @@ export async function startStudioServer({
       const input = await readJson(request);
       const staleFingerprint = requiredFingerprint(input.staleFingerprint);
       const currentFingerprint = requiredFingerprint(input.currentFingerprint);
+      const hasSource = Object.hasOwn(input, 'source');
+      const hasForm = Object.hasOwn(input, 'patch') || Object.hasOwn(input, 'body');
       if (
         staleFingerprint === currentFingerprint
-        || typeof input.source !== 'string'
+        || hasSource === hasForm
         || input.force === true
+      ) {
+        throw new StudioHttpError(400, 'malformed_request', 'Malformed request');
+      }
+      if (hasSource && typeof input.source !== 'string') {
+        throw new StudioHttpError(400, 'malformed_request', 'Malformed request');
+      }
+      if (
+        !hasSource
+        && (
+          typeof input.body !== 'string'
+          || !input.patch
+          || typeof input.patch !== 'object'
+          || Array.isArray(input.patch)
+        )
       ) {
         throw new StudioHttpError(400, 'malformed_request', 'Malformed request');
       }
@@ -611,7 +627,7 @@ export async function startStudioServer({
         workspaceId: input.workspaceId,
         relativePath: input.relativePath,
         expectedFingerprint: currentFingerprint,
-        source: input.source,
+        ...(hasSource ? { source: input.source } : { patch: input.patch, body: input.body }),
       });
       jsonResponse(response, 200, { document });
       return;

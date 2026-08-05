@@ -8,10 +8,12 @@ import { publicationFormSchema } from '../publisher/lib/studio-frontmatter.mjs';
 import { buildStudioAssets } from '../publisher/studio.mjs';
 
 const SHELL_PATH = new URL('../publisher/studio/index.html', import.meta.url);
+const INDEX_PATH = new URL('../publisher/studio/client/index.js', import.meta.url);
 const UI_PATH = new URL('../publisher/studio/client/ui.js', import.meta.url);
 const CSS_PATH = new URL('../publisher/studio/client/styles.css', import.meta.url);
 
 const shell = await readFile(SHELL_PATH, 'utf8');
+const indexSource = await readFile(INDEX_PATH, 'utf8');
 const uiSource = await readFile(UI_PATH, 'utf8');
 const styles = await readFile(CSS_PATH, 'utf8');
 
@@ -108,4 +110,25 @@ test('runStudio asset build emits the bundled client below the OS temp root', as
   assert.match(css, /--color-ink/u);
   const index = await readFile(path.join(assets.publicRoot, 'index.html'), 'utf8');
   assert.ok(index.includes('__STUDIO_DATA__'));
+});
+
+test('client exposes a dedicated dual-fingerprint conflict-resolution API', () => {
+  assert.match(
+    indexSource,
+    /resolveConflict:\s*\(input\)\s*=>\s*request\(['"]\/document\/resolve-conflict['"],\s*\{\s*method:\s*'PUT',\s*json:\s*input\s*\}\)/u,
+  );
+  assert.doesNotMatch(
+    indexSource,
+    /resolveConflict:\s*\(input\)\s*=>\s*request\(['"]\/document['"]/u,
+  );
+});
+
+test('keep-browser conflict resolution sends stale and current fingerprints through the dedicated endpoint', () => {
+  const block = uiSource.slice(uiSource.indexOf('resolveConflictKeepBrowser'));
+  assert.match(block, /api\.resolveConflict\(/u);
+  assert.match(block, /staleFingerprint:\s*conflict\.staleFingerprint/u);
+  assert.match(block, /currentFingerprint:\s*conflict\.diskFingerprint/u);
+  assert.match(block, /patch:\s*readFormMetadata\(\)/u);
+  assert.match(block, /body:\s*currentBody\(\)/u);
+  assert.doesNotMatch(block, /api\.saveDocument/u);
 });

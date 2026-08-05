@@ -28,7 +28,7 @@ test('homepage presents three distinct practices and the approved introduction',
   );
   assert.match(
     html,
-    /关注化工、航运、矿业等周期行业与商品期货，记录产业研究、交易实践，以及 AI 对研究方法与日常生活的改变。/,
+    /关注周期行业与商品期货，记录产业研究、交易实践，以及 AI 对研究方法与日常生活的改变。/,
   );
 });
 

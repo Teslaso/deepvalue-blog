@@ -46,6 +46,17 @@ test('production hero uses the compressed asset and design plan has portable pro
   assert.doesNotMatch(plan, /\/Users\/matt\//u);
 });
 
+test('homepage places the commodity manifesto between the hero and investment research', async () => {
+  const homepage = await source('src/pages/index.astro');
+  const manifestoPosition = homepage.indexOf('class="manifesto"');
+  const investmentPosition = homepage.indexOf('class="investment-section"');
+
+  assert.ok(manifestoPosition >= 0);
+  assert.ok(investmentPosition > manifestoPosition);
+  assert.match(homepage, /WHY COMMODITIES/u);
+  assert.match(homepage, /我喜欢大宗商品，因为它离真实世界足够近。/u);
+});
+
 test('dark surfaces use an accessible copper semantic token for small text', async () => {
   const layout = await source('src/layouts/Base.astro');
   const homepage = await source('src/pages/index.astro');

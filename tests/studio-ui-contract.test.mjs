@@ -104,15 +104,15 @@ test('stylesheet carries the confirmed Deep Value tokens and mobile breakpoint',
 
 test('preview centers the reading column and keeps the outline as a separate rail', () => {
   assert.match(styles, /\.studio-panel--preview\s*\{\s*container-type:\s*inline-size;/u);
-  assert.match(styles, /\.studio-preview-body\s*\{[^}]*grid-template-columns:\s*minmax\(0, 47rem\) 200px;/u);
+  assert.match(styles, /\.studio-preview-body\s*\{[^}]*display:\s*flex;/u);
   assert.match(styles, /\.studio-preview-body\s*\{[^}]*justify-content:\s*center;/u);
-  assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*margin:\s*0 auto;/u);
+  assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*overflow-y:\s*auto;/u);
   assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*max-width:\s*47rem;/u);
-  assert.match(styles, /\.studio-preview-canvas\s*\{[^}]*padding:\s*0 24px;/u);
-  assert.match(styles, /\.studio-outline\s*\{[^}]*border-left:\s*var\(--line\);/u);
+  assert.match(styles, /\.studio-outline\s*\{[^}]*flex:\s*0 0 200px;/u);
   assert.match(styles, /@container \(max-width: 959px\)/u);
   const narrowBlock = styles.slice(styles.indexOf('@container (max-width: 959px)'));
-  assert.match(narrowBlock, /\.studio-outline\s*\{[^}]*width:\s*100%;/u);
+  assert.match(narrowBlock, /\.studio-preview-body\s*\{[^}]*flex-direction:\s*column;/u);
+  assert.match(narrowBlock, /justify-content:\s*flex-start;/u);
 });
 
 test('runStudio asset build emits the bundled client below the OS temp root', async (t) => {

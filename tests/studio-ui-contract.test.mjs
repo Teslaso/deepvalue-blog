@@ -132,3 +132,53 @@ test('keep-browser conflict resolution sends stale and current fingerprints thro
   assert.match(block, /body:\s*currentBody\(\)/u);
   assert.doesNotMatch(block, /api\.saveDocument/u);
 });
+
+test('a 409 save response stops auto-save, keeps the browser buffer, and blocks prepare until resolved', () => {
+  const saveBlock = uiSource.slice(uiSource.indexOf('async function saveActiveDocument'));
+  const conflictBlock = uiSource.slice(
+    uiSource.indexOf('function enterConflict'),
+    uiSource.indexOf('async function resolveConflictReload'),
+  );
+  const autosaveBlock = uiSource.slice(uiSource.indexOf('function scheduleAutosave'));
+
+  assert.match(saveBlock, /if \(error\.status === 409\) \{\s*await enterConflict\(\);/u);
+  assert.match(conflictBlock, /clearTimeout\(autosaveTimer\)/u);
+  assert.match(conflictBlock, /setSaveState\('conflict'\)/u);
+  assert.doesNotMatch(conflictBlock, /editor\.setValue/u);
+  assert.match(conflictBlock, /conflictDiskFingerprint\.textContent\s*=\s*shortFingerprint\(disk\.fingerprint\)/u);
+  assert.match(conflictBlock, /conflictBrowserFingerprint\.textContent\s*=\s*shortFingerprint\(doc\.fingerprint\)/u);
+  assert.match(conflictBlock, /conflictBrowserSource\.textContent\s*=\s*currentBody\(\)/u);
+  assert.match(autosaveBlock, /if \(state\.saveState === 'conflict'\) return;/u);
+  assert.match(
+    uiSource,
+    /const blocked = !doc \|\| state\.dirty \|\| state\.saveState === 'conflict' \|\| state\.publishing;/u,
+  );
+});
+
+test('prepare forces a save first and the publish review appears only after a successful prepare', () => {
+  const prepareBlock = uiSource.slice(uiSource.indexOf('async function preparePublication'));
+
+  assert.match(prepareBlock, /if \(state\.dirty\) await saveActiveDocument\(\);/u);
+  assert.match(prepareBlock, /if \(state\.dirty \|\| state\.saveState === 'conflict'\) return;/u);
+  assert.match(prepareBlock, /elements\.publishRoute\.textContent = publication\.route/u);
+  assert.match(prepareBlock, /elements\.publishFrame\.src = publication\.previewUrl/u);
+  assert.match(prepareBlock, /renderManifest\(publication\)/u);
+  assert.match(prepareBlock, /elements\.publishReview\.hidden = false/u);
+  assert.match(prepareBlock, /renderDiagnostics\(elements\.publishDiagnostics, error\.diagnostics/u);
+  assert.match(shell, /data-testid="publish-review"[^>]*hidden/u);
+});
+
+test('publication actions lock after one click and cancel returns to editing without changing the note', () => {
+  const confirmBlock = uiSource.slice(uiSource.indexOf('async function confirmPublication'));
+  const cancelBlock = uiSource.slice(uiSource.indexOf('async function cancelPublication'));
+  const closeBlock = uiSource.slice(uiSource.indexOf('function closePublishReview'));
+
+  assert.match(confirmBlock, /lockPublishButtons\(true\)/u);
+  assert.match(cancelBlock, /lockPublishButtons\(true\)/u);
+  assert.match(confirmBlock, /本地提交已保留/u);
+  assert.match(confirmBlock, /手动 git push/u);
+  assert.match(cancelBlock, /closePublishReview\(\)/u);
+  assert.match(closeBlock, /state\.publication = undefined/u);
+  assert.match(closeBlock, /publishReview\.hidden = true/u);
+  assert.match(closeBlock, /publishFrame\.removeAttribute\('src'\)/u);
+});

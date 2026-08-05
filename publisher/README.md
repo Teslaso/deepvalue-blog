@@ -196,6 +196,10 @@ Configure it in `publish.config.local.json`:
 }
 ```
 
+`stagingParent` is optional. When set, it must be an existing absolute directory
+outside both the repository and the Vault; it receives the isolated Astro
+preview builds. It defaults to the operating-system temporary directory.
+
 Then start it:
 
 ```bash

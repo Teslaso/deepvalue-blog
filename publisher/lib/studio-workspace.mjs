@@ -46,7 +46,7 @@ async function stableDirectoryEntries(guard, relativeDirectory) {
   return entries;
 }
 
-async function listMarkdownFiles(guard, relativeDirectory = '') {
+async function listMarkdownFiles(guard, relativeDirectory = '', recursive = true) {
   const entries = await stableDirectoryEntries(guard, relativeDirectory);
   const files = [];
 
@@ -56,8 +56,8 @@ async function listMarkdownFiles(guard, relativeDirectory = '') {
       ? `${relativeDirectory}/${entry.name}`
       : entry.name;
     if (entry.isDirectory()) {
-      if (entry.name.startsWith('.')) continue;
-      files.push(...await listMarkdownFiles(guard, relativePath));
+      if (!recursive || entry.name.startsWith('.')) continue;
+      files.push(...await listMarkdownFiles(guard, relativePath, recursive));
       continue;
     }
     if (entry.isFile() && path.posix.extname(entry.name).toLowerCase() === '.md') {
@@ -120,7 +120,7 @@ export async function scanStudioWorkspace(config) {
   for (const workspace of config.studioWorkspaces) {
     const guard = await openStudioWorkspaceGuard(config, workspace.id);
     try {
-      const relativePaths = await listMarkdownFiles(guard);
+      const relativePaths = await listMarkdownFiles(guard, '', workspace.recursive !== false);
       const documents = [];
       for (const relativePath of relativePaths) {
         try {

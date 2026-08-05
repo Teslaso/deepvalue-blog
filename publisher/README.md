@@ -196,6 +196,11 @@ Configure it in `publish.config.local.json`:
 }
 ```
 
+Each workspace scans its directory recursively for Markdown files. Set
+`"recursive": false` to list only the files directly inside the directory, and
+use `"path": "."` with `"recursive": false` for a workspace that shows only the
+loose notes at the Vault root without browsing its subfolders.
+
 `stagingParent` is optional. When set, it must be an existing absolute directory
 outside both the repository and the Vault; it receives the isolated Astro
 preview builds. It defaults to the operating-system temporary directory.

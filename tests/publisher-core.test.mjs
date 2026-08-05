@@ -961,6 +961,13 @@ test('publisher package, ignore rules, and example config keep local publishing 
         id: 'research',
         label: '产业研究',
         path: 'Publishing/Research',
+        recursive: true,
+      },
+      {
+        id: 'root',
+        label: '根目录',
+        path: '.',
+        recursive: false,
       },
     ],
     studioAttachmentRoot: 'Attachments/Studio',

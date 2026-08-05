@@ -246,3 +246,25 @@ ready
     await cleanup(current.root);
   }
 });
+
+test('a non-recursive workspace lists only top-level Markdown files', async () => {
+  const current = await fixture();
+  current.config.studioWorkspaces[0] = {
+    ...current.config.studioWorkspaces[0],
+    recursive: false,
+  };
+
+  try {
+    await mkdir(path.join(current.workspace, 'Nested'));
+    await writeFile(path.join(current.workspace, 'Top.md'), '---\ntitle: Top\n---\npublic\n');
+    await writeFile(path.join(current.workspace, 'Nested', 'Deep.md'), '---\ntitle: Deep\n---\npublic\n');
+
+    const [{ documents }] = await scanStudioWorkspace(current.config);
+    assert.deepEqual(
+      documents.map(({ relativePath }) => relativePath),
+      ['Top.md'],
+    );
+  } finally {
+    await cleanup(current.root);
+  }
+});

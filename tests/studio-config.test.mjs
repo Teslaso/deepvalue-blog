@@ -63,10 +63,45 @@ test('validatePublishConfig resolves physical studio workspaces and an absent at
       id: 'research',
       label: '产业研究',
       path: await realpath(path.join(fixture.vaultRoot, 'Publishing/Research')),
+      recursive: true,
     }]);
     assert.equal(
       config.studioAttachmentRoot,
       path.join(await realpath(path.join(fixture.vaultRoot, 'Attachments')), 'Studio'),
+    );
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});
+
+test('validatePublishConfig allows a non-recursive workspace at the Vault root', async () => {
+  const fixture = await createFixture();
+
+  try {
+    const config = await validatePublishConfig({
+      ...validConfig(fixture.vaultRoot),
+      studioWorkspaces: [
+        { id: 'root', label: '根目录', path: '.', recursive: false },
+      ],
+      studioAttachmentRoot: 'Attachments/Studio',
+    }, { repoRoot: fixture.repoRoot });
+
+    assert.deepEqual(config.studioWorkspaces, [{
+      id: 'root',
+      label: '根目录',
+      path: await realpath(fixture.vaultRoot),
+      recursive: false,
+    }]);
+
+    await assert.rejects(
+      validatePublishConfig({
+        ...validConfig(fixture.vaultRoot),
+        studioWorkspaces: [
+          { id: 'bad', label: '错误类型', path: 'Publishing/Research', recursive: 'yes' },
+        ],
+        studioAttachmentRoot: 'Attachments/Studio',
+      }, { repoRoot: fixture.repoRoot }),
+      (error) => error.diagnostics.some(({ code }) => code === 'invalid_type'),
     );
   } finally {
     await removeFixture(fixture.root);

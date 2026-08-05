@@ -172,6 +172,14 @@ async function validateStudioConfig({ config, normalizedVaultRoot, filename, dia
         ));
         continue;
       }
+      if (workspace.recursive !== undefined && typeof workspace.recursive !== 'boolean') {
+        diagnostics.push(diagnostic(
+          filename,
+          `${field}.recursive`,
+          'Studio workspace recursive must be a boolean',
+          'invalid_type',
+        ));
+      }
       if (!normalizedVaultRoot) continue;
 
       try {
@@ -179,7 +187,7 @@ async function validateStudioConfig({ config, normalizedVaultRoot, filename, dia
           root: normalizedVaultRoot,
           rawPath: workspace.path,
           label: 'Studio workspace path',
-          allowRoot: false,
+          allowRoot: true,
         });
         const directoryError = await studioDirectoryDiagnostic({
           filename,
@@ -201,6 +209,7 @@ async function validateStudioConfig({ config, normalizedVaultRoot, filename, dia
             id: workspace.id,
             label: workspace.label.trim(),
             path: resolvedPath,
+            recursive: workspace.recursive !== false,
           });
         }
       } catch (error) {

@@ -9,6 +9,8 @@ npm run dev
 npm test
 npm run build
 npm run preview
+npm run studio        # local Web writing studio (loopback only)
+npm run studio:test   # studio test suite
 ```
 
 ## Publish from Obsidian
@@ -42,6 +44,25 @@ Push**, **Confirm without Push**, or **Cancel**. For intentional automation, use
 `--yes --no-push`; without `--yes`, publication cannot apply non-interactively.
 See [publisher/README.md](publisher/README.md) for frontmatter, recovery, privacy,
 and Obsidian shell-command setup.
+
+## Writing Studio (local Web editor)
+
+`npm run studio` opens a loopback-only Web editor that reads and writes the
+Markdown notes directly inside the configured Vault publishing directories. It
+offers an immediate blog-style preview, frontmatter form, image paste/drop, and
+reuses the exact two-stage Publisher transaction above for the final
+"准备发布 → 确认并推送" flow.
+
+```bash
+npm run studio            # opens the browser
+npm run studio -- --no-open
+```
+
+The server binds only to `127.0.0.1`, authenticates every API call with a
+per-session token, and never scans or exposes the rest of the Vault. Configure
+`studioWorkspaces` and `studioAttachmentRoot` in `publish.config.local.json`
+(see [publisher/README.md](publisher/README.md)). The CLI publisher remains
+fully supported and unchanged.
 
 ## Content
 
@@ -102,6 +123,8 @@ The six legacy topic URLs are HTTP 301 redirects managed in `vercel.json`. Their
 Run the full suite before publishing:
 
 ```bash
+npm run studio:test
+npm run publish:test
 npm test
 npm run build
 test -f 'dist/blog/滨化股份-g5-级电子级氢氟酸真业务小体量与第二曲线验证/index.html'

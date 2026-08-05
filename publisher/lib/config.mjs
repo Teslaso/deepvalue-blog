@@ -372,6 +372,46 @@ export async function validatePublishConfig(rawConfig, {
     ));
   }
 
+  let stagingParent;
+  if (config.stagingParent !== undefined) {
+    if (typeof config.stagingParent !== 'string' || config.stagingParent.trim() === '') {
+      diagnostics.push(diagnostic(
+        filename,
+        'stagingParent',
+        'Staging parent must be a non-empty absolute path',
+        'invalid_type',
+      ));
+    } else if (!path.isAbsolute(config.stagingParent)) {
+      diagnostics.push(diagnostic(
+        filename,
+        'stagingParent',
+        'Staging parent must be an absolute path',
+        'invalid_path',
+      ));
+    } else {
+      try {
+        const stagingStats = await stat(config.stagingParent);
+        if (!stagingStats.isDirectory()) {
+          diagnostics.push(diagnostic(
+            filename,
+            'stagingParent',
+            'Staging parent must be a directory',
+            'invalid_directory',
+          ));
+        } else {
+          stagingParent = await realpath(config.stagingParent);
+        }
+      } catch (error) {
+        diagnostics.push(diagnostic(
+          filename,
+          'stagingParent',
+          `Staging parent could not be inspected: ${error.message}`,
+          'path_error',
+        ));
+      }
+    }
+  }
+
   const studioConfig = await validateStudioConfig({
     config,
     normalizedVaultRoot,
@@ -389,6 +429,7 @@ export async function validatePublishConfig(rawConfig, {
     attachmentRoots,
     ignoreFolders,
     includeInlineHashtags,
+    ...(stagingParent ? { stagingParent } : {}),
     ...studioConfig,
   };
 }

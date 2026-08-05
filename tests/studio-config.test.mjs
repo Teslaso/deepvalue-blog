@@ -236,3 +236,38 @@ test('studio path helpers keep lexical and physical paths inside their root', as
     await removeFixture(fixture.root);
   }
 });
+
+test('validatePublishConfig resolves an optional absolute staging parent and rejects invalid values', async () => {
+  const fixture = await createFixture();
+
+  try {
+    const stagingParent = path.join(fixture.root, 'staging');
+    await mkdir(stagingParent);
+
+    const withStaging = await validatePublishConfig({
+      ...validConfig(fixture.vaultRoot),
+      stagingParent,
+    }, { repoRoot: fixture.repoRoot });
+    assert.equal(withStaging.stagingParent, await realpath(stagingParent));
+
+    await assert.rejects(
+      validatePublishConfig({
+        ...validConfig(fixture.vaultRoot),
+        stagingParent: 'relative/staging',
+      }, { repoRoot: fixture.repoRoot }),
+      (error) => error.diagnostics.some(({ code }) => code === 'invalid_path'),
+    );
+
+    const fileStaging = path.join(fixture.root, 'staging-file');
+    await writeFile(fileStaging, 'not a directory');
+    await assert.rejects(
+      validatePublishConfig({
+        ...validConfig(fixture.vaultRoot),
+        stagingParent: fileStaging,
+      }, { repoRoot: fixture.repoRoot }),
+      (error) => error.diagnostics.some(({ code }) => code === 'invalid_directory'),
+    );
+  } finally {
+    await removeFixture(fixture.root);
+  }
+});

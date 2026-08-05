@@ -279,6 +279,7 @@ export async function prepareNotePublication(input = {}, overrides = {}) {
     vaultRoot: config.vaultRoot,
     notes: [transformedNote],
     state,
+    ...(config.stagingParent ? { stagingParent: config.stagingParent } : {}),
   });
 
   try {

@@ -1,23 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import EntryList from '../components/EntryList.astro';
 import { getPublishedEntries } from '../lib/entries.mjs';
-import { extractLeadImage } from '../lib/entry-utils.mjs';
-const publishedEntries = await getPublishedEntries();
-const investmentArticles = publishedEntries.filter(
-  entry => entry.data.domain === 'investment' && entry.data.format === 'article',
+import { sortEntriesByPublishedNewestFirst } from '../lib/entry-utils.mjs';
+const allArticles = sortEntriesByPublishedNewestFirst(
+  await getPublishedEntries({ format: 'article' }),
 );
-const investmentRows = investmentArticles.map(entry => ({
-  entry,
-  preview: extractLeadImage(entry.body),
-}));
-const aiEntries = publishedEntries.filter(entry => entry.data.domain === 'ai').slice(0, 3);
-const formatDate = (date: Date) => new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-}).format(date).toUpperCase();
-const dateTime = (date: Date) => date.toISOString().slice(0, 10);
 ---
 <Base
   title="Deep Value Research"
@@ -48,82 +36,21 @@ const dateTime = (date: Date) => date.toISOString().slice(0, 10);
   </section>
   <div class="paper">
     <div class="content-frame">
-      <section class="investment-section" aria-labelledby="investment-heading">
+      <section class="all-articles-section" aria-labelledby="all-articles-heading">
         <div class="section-label">
-          <h2 id="investment-heading" data-i18n="home.investmentHeading">INVESTMENT RESEARCH / 投资研究</h2>
-          <a href="/investment/" data-i18n="home.sectionLink">进入栏目</a>
+          <div>
+            <p data-i18n="index.entryIndex">ARTICLE INDEX</p>
+            <h2 id="all-articles-heading" data-i18n="index.articleList">全部文章</h2>
+          </div>
+          <span>{String(allArticles.length).padStart(2, '0')} <span data-i18n="index.published">PUBLISHED</span></span>
         </div>
-        {investmentArticles.length > 0 ? (
-          <ol class="investment-list">
-            {investmentRows.map(({ entry, preview }, index) => (
-              <li class:list={['investment-row', { 'has-preview': Boolean(preview) }]}>
-                <span class="entry-index">{String(index + 1).padStart(2, '0')}</span>
-                <div class="entry-copy">
-                  <p class="entry-meta">
-                    <span>{entry.data.topic || entry.data.section || 'investment'}</span>
-                    <time datetime={dateTime(entry.data.published_at)}>
-                      {formatDate(entry.data.published_at)}
-                    </time>
-                  </p>
-                  <h3>
-                    <a href={`/blog/${entry.data.publish_id}`}>{entry.data.title}</a>
-                  </h3>
-                  {entry.data.summary && <p class="entry-summary">{entry.data.summary}</p>}
-                </div>
-                {preview && (
-                  <a
-                    class="entry-preview"
-                    href={`/blog/${entry.data.publish_id}`}
-                    aria-label={`查看文章：${entry.data.title}`}
-                  >
-                    <img
-                      src={preview.src}
-                      alt={preview.alt}
-                      width="640"
-                      height="480"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </a>
-                )}
-                <a class="row-link" href={`/blog/${entry.data.publish_id}`} aria-label={`阅读全文：${entry.data.title}`}>
-                  <span data-i18n="home.readMore">阅读全文</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <div class="section-empty">
-            <p data-i18n="home.investmentEmpty">当前没有已发布的投资研究文章。</p>
-          </div>
-        )}
+        <EntryList
+          entries={allArticles}
+          emptyText="暂时没有已发布的研究文章。"
+          emptyTextKey="publication.blogEmpty"
+          dateMode="published"
+        />
       </section>
-      <div class="secondary-grid">
-        <section class="desk-module" aria-labelledby="ai-heading">
-          <div class="module-heading">
-            <span>02</span>
-            <h2 id="ai-heading" data-i18n="home.aiHeading">AI &amp; TECHNOLOGY / AI 与技术</h2>
-          </div>
-          {aiEntries.length > 0 ? (
-            <ol class="compact-list">
-              {aiEntries.map(entry => (
-                <li>
-                  <time datetime={dateTime(entry.data.published_at)}>
-                    {formatDate(entry.data.published_at)}
-                  </time>
-                  <a href={`/blog/${entry.data.publish_id}`}>{entry.data.title}</a>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <div class="module-empty">
-              <p data-i18n="home.aiEmpty">这里收录 AI 应用、技术观察与研究工作流。当前尚无已发布内容。</p>
-              <span>No published AI entries</span>
-            </div>
-          )}
-          <a class="module-link" href="/ai/" data-i18n="home.aiLink">进入 AI 与技术</a>
-        </section>
-      </div>
     </div>
   </div>
 </Base>

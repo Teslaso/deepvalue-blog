@@ -46,13 +46,14 @@ test('production hero uses the compressed asset and design plan has portable pro
   assert.doesNotMatch(plan, /\/Users\/matt\//u);
 });
 
-test('homepage goes directly from the hero to investment research', async () => {
+test('homepage goes directly from the hero to the unified article list', async () => {
   const homepage = await source('src/pages/index.astro');
   const manifestoPosition = homepage.indexOf('class="manifesto"');
-  const investmentPosition = homepage.indexOf('class="investment-section"');
+  const articleListPosition = homepage.indexOf('class="all-articles-section"');
 
   assert.equal(manifestoPosition, -1);
-  assert.ok(investmentPosition >= 0);
+  assert.ok(articleListPosition >= 0);
+  assert.equal(homepage.indexOf('class="investment-section"'), -1);
   assert.doesNotMatch(homepage, /WHY COMMODITIES|我喜欢大宗商品，因为它离真实世界足够近。/u);
 });
 

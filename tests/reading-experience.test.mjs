@@ -16,12 +16,32 @@ before(() => {
   });
 });
 
-test('homepage proceeds from the hero to the article list without a featured-research module', () => {
+test('homepage presents one chronological list of all published articles', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
   const visible = visibleHtml(html);
 
   assert.doesNotMatch(visible, /FEATURED RESEARCH|重点研究|Published research/);
-  assert.match(visible, /INVESTMENT RESEARCH/);
+  assert.match(visible, /全部文章/);
+  assert.doesNotMatch(visible, /INVESTMENT RESEARCH|AI &amp; TECHNOLOGY/);
+
+  const homepage = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
+  assert.match(homepage, /sortEntriesByPublishedNewestFirst/);
+  assert.match(homepage, /dateMode="published"/);
+
+  const articleRoutes = [
+    '/blog/fast-slow-thinking-cognitive-rhythm/',
+    '/blog/ai-agent-chatbot-harness-mcp-skills/',
+    '/blog/switzerland-antifragile-institutions-research-method/',
+    '/blog/field-research-investment-method/',
+    '/blog/spacex-10gw-ai-compute-2027/',
+    '/blog/china-refining-capital-cycle/',
+    '/blog/hog-price-cycle/',
+    '/blog/滨化股份-g5-级电子级氢氟酸真业务小体量与第二曲线验证/',
+  ];
+  const positions = articleRoutes.map(route => html.indexOf(route));
+
+  assert.ok(positions.every(position => position >= 0));
+  assert.deepEqual([...positions].sort((left, right) => left - right), positions);
 });
 
 test('homepage presents three distinct practices and the concise introduction', () => {

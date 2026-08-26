@@ -1,5 +1,5 @@
 ---
-import { effectiveEntryDate } from '../lib/entry-utils.mjs';
+import { effectiveEntryDate, publishedEntryDate } from '../lib/entry-utils.mjs';
 
 const {
   entries,
@@ -7,6 +7,7 @@ const {
   emptyTextKey = 'entry.noContent',
   groupByFormat = false,
   compact = false,
+  dateMode = 'effective',
 } = Astro.props;
 
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -41,6 +42,10 @@ const groups = groupByFormat
         entries,
       },
     ];
+
+const displayDate = entry => dateMode === 'published'
+  ? publishedEntryDate(entry)
+  : effectiveEntryDate(entry);
 ---
 
 <div
@@ -77,8 +82,8 @@ const groups = groupByFormat
                   data-topic={entry.data.topic || ''}
                 >
                   <div class="entry-date-rail">
-                    <time datetime={effectiveEntryDate(entry).toISOString()}>
-                      {dateFormatter.format(effectiveEntryDate(entry))}
+                    <time datetime={displayDate(entry).toISOString()}>
+                      {dateFormatter.format(displayDate(entry))}
                     </time>
                   </div>
 

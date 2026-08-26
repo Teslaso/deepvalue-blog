@@ -7,19 +7,10 @@ import {
   ENGLISH_TRANSLATIONS,
 } from '../src/lib/i18n.mjs';
 
-test('English manifesto preserves the approved literary translation', () => {
-  assert.equal(
-    ENGLISH_TRANSLATIONS['home.manifestoTitle'],
-    'Why Commodities? Because They Are Real.',
-  );
-  assert.equal(
-    ENGLISH_TRANSLATIONS['home.manifestoP1'],
-    'Ore is lifted from the earth. Oil crosses narrow straits. Rain falls on distant fields. A single decree redirects trade. Nations, capital, war, weather, and human nature all leave their traces in price.',
-  );
-  assert.equal(
-    ENGLISH_TRANSLATIONS['home.manifestoP4'],
-    'This blog records that pursuit: beginning with price, moving through numbers and narratives, and returning to the real world—raw, uncertain, and always changing.',
-  );
+test('English translations no longer include the removed commodity manifesto', () => {
+  for (const key of ['home.manifestoLabel', 'home.manifestoTitle', 'home.manifestoP1', 'home.manifestoP2', 'home.manifestoP3', 'home.manifestoP4']) {
+    assert.equal(ENGLISH_TRANSLATIONS[key], undefined);
+  }
 });
 
 test('Every public page title and description has an English counterpart', () => {

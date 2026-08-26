@@ -24,7 +24,7 @@ test('homepage proceeds from the hero to the article list without a featured-res
   assert.match(visible, /INVESTMENT RESEARCH/);
 });
 
-test('homepage presents three distinct practices and the approved introduction', () => {
+test('homepage presents three distinct practices and the concise introduction', () => {
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
 
   assert.match(
@@ -33,17 +33,15 @@ test('homepage presents three distinct practices and the approved introduction',
   );
   assert.match(
     html,
-    /关注周期行业与商品期货，记录产业研究、交易实践，以及 AI 对研究方法与日常生活的改变。/,
+    /记录产业研究、交易实践与 AI 应用。/,
   );
 });
 
-test('homepage and About page expose structural English translation markers', () => {
+test('homepage removes the commodity manifesto while About keeps structural translation markers', () => {
   const homepage = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
   const about = readFileSync(new URL('../src/pages/about/index.astro', import.meta.url), 'utf8');
 
-  assert.match(homepage, /data-i18n="home.manifestoTitle"/u);
-  assert.match(homepage, /data-i18n="home.manifestoP1"/u);
-  assert.match(homepage, /data-i18n="home.manifestoP4"/u);
+  assert.doesNotMatch(homepage, /home\.manifesto/u);
   assert.match(about, /data-i18n="about.positioningTitle"/u);
   assert.match(about, /data-i18n="about.formatNote"/u);
 });

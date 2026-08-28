@@ -4,8 +4,7 @@ publish_id: work-salary-antifragility-taleb-inamori-career
 domain: beyond
 format: article
 status: published
-published_at: 2026-08-26T10:48:47.301Z
-updated_at: 2026-08-28T06:09:50.618Z
+published_at: 2026-05-23T09:00:00.000Z
 section: career
 topic: career-design
 summary: 从塔勒布对月薪依赖和尾部风险的批评出发，对照稻盛和夫关于认真工作的职业观，重新思考如何在投入工作、积累能力的同时，降低对单一雇主和单一收入来源的依赖。

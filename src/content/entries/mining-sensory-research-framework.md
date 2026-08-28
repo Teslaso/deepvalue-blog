@@ -4,7 +4,7 @@ publish_id: mining-sensory-research-framework
 domain: investment
 format: article
 status: published
-published_at: 2026-08-28T10:57:10.193Z
+published_at: 2026-07-05T09:00:00.000Z
 section: markets-trading
 topic: mining-research
 summary: 研究矿业不能只从供需平衡表和价格图开始。先把矿种、物质形态、生产流程、地理运输、行业指标和反常识变成具体画面，再从事实中抽象主要矛盾、因果链、反馈时滞与可证伪判断，最后用预测日志回到现实验证。

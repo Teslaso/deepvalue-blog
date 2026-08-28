@@ -4,8 +4,7 @@ publish_id: fast-slow-thinking-cognitive-rhythm
 domain: beyond
 format: article
 status: published
-published_at: 2026-08-26T10:17:06.917Z
-updated_at: 2026-08-28T06:09:54.478Z
+published_at: 2026-05-08T09:00:00.000Z
 section: reading
 topic: cognition
 summary: 从《思考，快与慢》的 System 1 与 System 2 出发，重新理解临场反应、认知反思、工作记忆和专家直觉，并设计一套既训练快速启动、又保留深度研究能力的多档思考系统。

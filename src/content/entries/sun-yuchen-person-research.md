@@ -4,8 +4,7 @@ publish_id: sun-yuchen-person-research
 domain: beyond
 format: article
 status: published
-published_at: 2026-08-28T05:00:31.684Z
-updated_at: 2026-08-28T06:04:21.876Z
+published_at: 2026-08-28T09:00:00.000Z
 section: people
 topic: sun-yuchen
 summary: 从孙宇晨的成长经历、TRON 与 Crypto 的财富跃迁，到注意力、资源转换、规则和风险观，拆解他的成功与争议如何来自同一套行为系统，并区分时代 Beta、个人能力、运气与不可复制的风险。

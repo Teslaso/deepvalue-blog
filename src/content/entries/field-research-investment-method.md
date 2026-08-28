@@ -4,8 +4,7 @@ publish_id: field-research-investment-method
 domain: investment
 format: article
 status: published
-published_at: 2026-08-26T04:37:22.895Z
-updated_at: 2026-08-28T06:10:05.992Z
+published_at: 2026-06-07T09:00:00.000Z
 section: markets-trading
 topic: research-methods
 summary: 田野调查不是简单地去现场看看，而是带着问题进入真实世界，用观察、访谈、参与和记录获取一手证据，再让现实不断修正自己的研究框架。

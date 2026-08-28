@@ -4,7 +4,7 @@ publish_id: dialectical-practice-chaos-complex-systems
 domain: investment
 format: article
 status: published
-published_at: 2026-08-28T11:06:50.557Z
+published_at: 2026-07-18T09:00:00.000Z
 section: markets-trading
 topic: complex-systems
 summary: 从《实践论》《矛盾论》出发，连接混沌理论与复杂系统，重新理解研究如何从现实获取材料、识别主要矛盾、处理反馈与非线性、形成条件性判断，并通过风险管理和持续复盘回到现实。

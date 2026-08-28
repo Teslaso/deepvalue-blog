@@ -4,8 +4,7 @@ publish_id: ai-agent-chatbot-harness-mcp-skills
 domain: ai
 format: article
 status: published
-published_at: 2026-08-26T09:56:25.341Z
-updated_at: 2026-08-28T06:09:58.325Z
+published_at: 2026-08-14T09:00:00.000Z
 section: workflows
 topic: ai-agents
 summary: 从 Chatbot 与 Agent 的工作流差异出发，拆解 Agent Loop、Tool、Harness、MCP、Skills、Memory 与 Context，并说明为什么 Coding Agent 成为目前最成熟的 Agent 场景，以及 AI 应在个人研究流程中扮演什么角色。

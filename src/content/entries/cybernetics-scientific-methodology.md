@@ -4,7 +4,7 @@ publish_id: cybernetics-scientific-methodology
 domain: investment
 format: article
 status: published
-published_at: 2026-08-28T11:06:59.425Z
+published_at: 2026-07-30T09:00:00.000Z
 section: markets-trading
 topic: cybernetics-methodology
 summary: 从金观涛《控制论与科学方法论》出发，重新理解控制、可能性空间、反馈、稳态、临界点、滞后、模型误差和信息更新，并把这些概念转化为投资研究中的情景、仓位与行动纪律。

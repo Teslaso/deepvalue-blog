@@ -1,10 +1,11 @@
 ---
-title: AI Agent：我对 Chatbot、Agent、Harness、MCP 与 Skills 的理解
+title: AI Agent 到底是什么
 publish_id: ai-agent-chatbot-harness-mcp-skills
 domain: ai
 format: article
 status: published
 published_at: 2026-08-26T09:56:25.341Z
+updated_at: 2026-08-28T06:09:58.325Z
 section: workflows
 topic: ai-agents
 summary: 从 Chatbot 与 Agent 的工作流差异出发，拆解 Agent Loop、Tool、Harness、MCP、Skills、Memory 与 Context，并说明为什么 Coding Agent 成为目前最成熟的 Agent 场景，以及 AI 应在个人研究流程中扮演什么角色。
@@ -24,7 +25,7 @@ companies: []
 tickers: []
 ---
 
-# AI Agent：我对 Chatbot、Agent、Harness、MCP 与 Skills 的理解
+# AI Agent 到底是什么
 
 我最近想系统梳理一下自己对 AI 的看法。原因并不是单纯想了解几个新产品，而是我觉得 AI 已经开始成为工作中的一个长期变量。以后无论是和其他人交流讨论，还是自己判断新的 AI 产品，我至少应该形成一套比较稳定的理解，而不是只能说“ChatGPT 很好用”“Claude Code 很厉害”。
 

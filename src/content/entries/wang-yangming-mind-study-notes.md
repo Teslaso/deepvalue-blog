@@ -4,7 +4,7 @@ publish_id: wang-yangming-mind-study-notes
 domain: beyond
 format: article
 status: published
-published_at: 2026-08-28T12:23:24.798Z
+published_at: 2026-04-18T09:00:00.000Z
 section: reading
 topic: wang-yangming
 summary: 从王阳明的心即理、致良知、知行合一和事上磨炼出发，重新理解人为什么明白道理却仍然做不到，并把不自欺、识别自我合理化和回到现实行动转化为一套可实践的自我检验方法。

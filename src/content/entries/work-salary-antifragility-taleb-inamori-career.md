@@ -1,10 +1,11 @@
 ---
-title: 工作、月薪与反脆弱：从塔勒布和稻盛和夫出发的职业思考
+title: 月薪到底是不是一种脆弱性
 publish_id: work-salary-antifragility-taleb-inamori-career
 domain: beyond
 format: article
 status: published
 published_at: 2026-08-26T10:48:47.301Z
+updated_at: 2026-08-28T06:09:50.618Z
 section: career
 topic: career-design
 summary: 从塔勒布对月薪依赖和尾部风险的批评出发，对照稻盛和夫关于认真工作的职业观，重新思考如何在投入工作、积累能力的同时，降低对单一雇主和单一收入来源的依赖。
@@ -24,7 +25,7 @@ companies: []
 tickers: []
 ---
 
-# 工作、月薪与反脆弱：从塔勒布和稻盛和夫出发的职业思考
+# 月薪到底是不是一种脆弱性
 
 最近我在思考一个看起来很普通、实际上可能贯穿整个职业生涯的问题：**一个人应该怎样看待“上班、打工、领月薪”这件事？**
 

@@ -1,11 +1,11 @@
 ---
-title: 瑞士为什么这么特别：从《反脆弱》到制度、瑞郎、银行，以及我对研究方法的一次重构
+title: 瑞士为什么这么特别
 publish_id: switzerland-antifragile-institutions-research-method
 domain: investment
 format: article
 status: published
 published_at: 2026-08-26T09:32:22.034Z
-updated_at: 2026-08-26T09:39:42.844Z
+updated_at: 2026-08-28T06:10:02.196Z
 section: macro-cycles
 topic: switzerland
 summary: 从《反脆弱》出发，拆解瑞士的联邦制、直接民主、中立、瑞郎、银行、产业与大宗商品贸易，解释这些看似分散的现象如何共同形成制度可信度，并把研究过程重构成一套可复用的方法。

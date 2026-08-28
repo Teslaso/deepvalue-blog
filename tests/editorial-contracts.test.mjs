@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { INVESTMENT_SECTIONS } from '../publisher/lib/validate.mjs';
 
 const repositoryRoot = new URL('../', import.meta.url);
@@ -30,41 +30,33 @@ test('publisher documentation names the same canonical investment section slugs'
   );
 });
 
-test('production hero uses the compressed asset and design plan has portable provenance', async () => {
+test('homepage no longer depends on the old hero asset', async () => {
   const homepage = await source('src/pages/index.astro');
-  const plan = await source('docs/superpowers/plans/2026-07-21-site-editorial-redesign.md');
-  const optimizedHero = await stat(new URL(
-    'public/images/brand/commodities-macro-hero.avif',
-    repositoryRoot,
-  ));
 
-  assert.match(homepage, /commodities-macro-hero\.avif/u);
-  assert.doesNotMatch(homepage, /commodities-macro-hero\.png/u);
-  assert.ok(optimizedHero.size >= 100_000 && optimizedHero.size <= 700_000);
-  await assert.rejects(source('public/images/brand/commodities-macro-hero.png'));
-  assert.match(plan, /SHA-256:/u);
-  assert.doesNotMatch(plan, /\/Users\/matt\//u);
+  assert.doesNotMatch(homepage, /commodities-macro-hero\.(?:avif|png)/u);
+  assert.match(homepage, /class="homepage-index"/u);
 });
 
-test('homepage goes directly from the hero to the unified article list', async () => {
+test('homepage goes directly into the unified article list', async () => {
   const homepage = await source('src/pages/index.astro');
-  const manifestoPosition = homepage.indexOf('class="manifesto"');
   const articleListPosition = homepage.indexOf('class="all-articles-section"');
 
-  assert.equal(manifestoPosition, -1);
   assert.ok(articleListPosition >= 0);
-  assert.equal(homepage.indexOf('class="investment-section"'), -1);
+  assert.equal(homepage.indexOf('class="hero"'), -1);
   assert.doesNotMatch(homepage, /WHY COMMODITIES|我喜欢大宗商品，因为它离真实世界足够近。/u);
 });
 
-test('Base exposes an accessible locale switcher and shared translation runtime', async () => {
+test('Base exposes only the personal brand and the two primary links', async () => {
   const layout = await source('src/layouts/Base.astro');
 
-  assert.match(layout, /data-locale-link="zh"/u);
-  assert.match(layout, /data-locale-link="en"/u);
-  assert.match(layout, /deepvalue-locale/u);
-  assert.match(layout, /data-i18n="site.skip"/u);
-  assert.match(layout, /ENGLISH_TRANSLATIONS/u);
+  assert.match(layout, /Deep Value/gu);
+  assert.match(layout, /href: '\/blog\//u);
+  assert.match(layout, /href: '\/about\//u);
+  assert.doesNotMatch(layout, /href: '\/investment\//u);
+  assert.doesNotMatch(layout, /href: '\/ai\//u);
+  assert.doesNotMatch(layout, /href: '\/archive\//u);
+  assert.doesNotMatch(layout, /language-switcher|data-locale-link|translationPayload|ENGLISH_TRANSLATIONS/u);
+  assert.doesNotMatch(layout, /Deep Value Research|research publication|Investment · Commodities · AI/u);
 });
 
 test('public index and detail pages mark structural copy for translation', async () => {
@@ -93,7 +85,7 @@ test('dark surfaces use an accessible copper semantic token for small text', asy
 
   assert.match(layout, /--color-copper-on-ink:\s*#[0-9a-f]{6}/iu);
   assert.match(layout, /\.footer-links a\s*\{[^}]*color:\s*var\(--color-copper-on-ink\)/su);
-  assert.match(homepage, /\.hero-index-row span:first-child\s*\{[^}]*color:\s*var\(--color-copper-on-ink\)/su);
+  assert.match(homepage, /\.homepage-index\s*\{[^}]*background:\s*var\(--surface-primary\)/su);
   assert.match(blogIndex, /\.domain-filter button\.is-active span\s*\{[^}]*color:\s*var\(--color-copper-on-ink\)/su);
 });
 

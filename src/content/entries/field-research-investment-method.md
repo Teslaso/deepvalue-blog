@@ -1,10 +1,11 @@
 ---
-title: 田野调查：从概念理解到投资研究方法
+title: 田野调查到底是什么
 publish_id: field-research-investment-method
 domain: investment
 format: article
 status: published
 published_at: 2026-08-26T04:37:22.895Z
+updated_at: 2026-08-28T06:10:05.992Z
 section: markets-trading
 topic: research-methods
 summary: 田野调查不是简单地去现场看看，而是带着问题进入真实世界，用观察、访谈、参与和记录获取一手证据，再让现实不断修正自己的研究框架。
@@ -23,7 +24,7 @@ companies: []
 tickers: []
 ---
 
-# 田野调查：从概念理解到投资研究方法
+# 田野调查到底是什么
 
 > 这篇笔记是我在系统了解“田野调查”之后，对这个概念、它与桌面研究的关系、毛泽东调查研究的方法，以及它对投资研究的启发所做的整理。
 >

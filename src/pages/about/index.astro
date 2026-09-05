@@ -2,70 +2,17 @@
 import Base from '../../layouts/Base.astro';
 ---
 
-<Base title="关于 - Deep Value" description="关于 Deep Value 的个人记录与探索方式">
+<Base title="关于 - Deep Value" description="关注投资、交易、大宗商品与量化交易，持续学习和实践。">
   <header class="about-header">
     <div class="about-kicker">
-      <p data-i18n="about.kicker">ABOUT DEEP VALUE</p>
-      <span data-i18n="about.independent">INDEPENDENT PUBLICATION</span>
+      <p data-i18n="about.kicker">ABOUT ME</p>
+      <span data-i18n="about.independent">LEARNING IN PUBLIC</span>
     </div>
     <div class="about-introduction">
       <h1 data-i18n="about.title">关于</h1>
-      <p data-i18n="about.intro">Deep Value 以投资、交易与大宗商品研究为核心，同时记录 AI 应用、研究工作流与边界之外的探索。</p>
+      <p data-i18n="about.intro">我关注投资、交易、大宗商品与量化交易。目前还在学习阶段，保持热爱，持续学习和实践。</p>
     </div>
   </header>
-
-  <article class="about-content">
-    <section class="about-section" aria-labelledby="positioning-title">
-      <p class="section-number">01 / POSITIONING</p>
-      <div>
-        <h2 id="positioning-title" data-i18n="about.positioningTitle">一份以证据为起点的个人研究出版物</h2>
-        <p data-i18n="about.positioningBody">
-          这里不追求用即时行情或宏大口号替代研究。内容尽量区分已知事实、研究推断和仍待验证的问题，并持续记录哪些条件可能加强或推翻当前判断。
-        </p>
-      </div>
-    </section>
-
-    <section class="about-section" aria-labelledby="scope-title">
-      <p class="section-number">02 / SCOPE</p>
-      <div>
-        <h2 id="scope-title" data-i18n="about.scopeTitle">研究范围</h2>
-        <dl class="scope-list">
-          <div>
-            <dt><a href="/investment/" data-i18n="about.investment">投资研究</a></dt>
-            <dd data-i18n="about.investmentBody">大宗商品、产业与公司、宏观周期，以及市场与交易。</dd>
-          </div>
-          <div>
-            <dt><a href="/ai/" data-i18n="about.ai">AI 与技术</a></dt>
-            <dd data-i18n="about.aiBody">AI 应用、产品和产业观察，以及研究工具、工作流与实验。</dd>
-          </div>
-          <div>
-            <dt><a href="/beyond/" data-i18n="about.beyond">边界之外</a></dt>
-            <dd data-i18n="about.beyondBody">生活观察、阅读思考、个人项目和不属于前两个专业领域的探索。</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="about-section" aria-labelledby="formats-title">
-      <p class="section-number">03 / FORMATS</p>
-      <div>
-        <h2 id="formats-title" data-i18n="about.formatsTitle">研究文章与研究日志</h2>
-        <div class="format-grid">
-          <section>
-            <p>ARTICLE</p>
-            <h3 data-i18n="about.articleTitle">研究文章</h3>
-            <p data-i18n="about.articleBody">面向长期复用的结构化结论，通常包含明确问题、证据、判断，以及限制或证伪条件。</p>
-          </section>
-          <section>
-            <p>LOG</p>
-            <h3 data-i18n="about.logTitle">研究日志</h3>
-            <p data-i18n="about.logBody">面向某个时间点的观察、研究更新或演变中的判断，保留当时的上下文与不确定性。</p>
-          </section>
-        </div>
-        <p class="format-note" data-i18n="about.formatNote">篇幅长短不是两者的区分标准：长内容仍可能是一则日志，短内容也可能形成一篇完整文章。</p>
-      </div>
-    </section>
-  </article>
 </Base>
 
 <style>
@@ -116,131 +63,8 @@ import Base from '../../layouts/Base.astro';
     line-height: 1.8;
   }
 
-  .about-content {
-    display: grid;
-  }
-
-  .about-section {
-    display: grid;
-    grid-template-columns: minmax(9rem, 0.25fr) minmax(0, 1fr);
-    gap: clamp(2rem, 6vw, 6.5rem);
-    padding: var(--space-6) 0;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .section-number {
-    margin: 0;
-    color: var(--metadata-primary);
-    font-family: var(--font-data);
-    font-size: var(--caption);
-    letter-spacing: 0.09em;
-  }
-
-  .about-section > div {
-    display: grid;
-    gap: var(--space-4);
-    max-width: 50rem;
-  }
-
-  .about-section h2,
-  .about-section > div > p {
-    margin: 0;
-  }
-
-  .about-section h2 {
-    max-width: 19ch;
-    font-size: var(--step-3);
-    font-weight: var(--weight-medium);
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-  }
-
-  .about-section > div > p {
-    max-width: 43rem;
-    color: var(--text-secondary);
-    line-height: 1.9;
-  }
-
-  .scope-list {
-    display: grid;
-    margin: 0;
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  .scope-list > div {
-    display: grid;
-    grid-template-columns: minmax(9rem, 0.35fr) minmax(0, 1fr);
-    gap: var(--space-4);
-    padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .scope-list dt,
-  .scope-list dd {
-    margin: 0;
-  }
-
-  .scope-list dt a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--link-primary);
-    border-bottom: 1px solid currentColor;
-  }
-
-  .scope-list dd {
-    align-self: center;
-    color: var(--text-secondary);
-    line-height: 1.75;
-  }
-
-  .format-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-top: 1px solid var(--color-ink);
-    border-bottom: 1px solid var(--color-ink);
-  }
-
-  .format-grid section {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-4);
-  }
-
-  .format-grid section + section {
-    border-left: 1px solid var(--border-subtle);
-  }
-
-  .format-grid p,
-  .format-grid h3 {
-    margin: 0;
-  }
-
-  .format-grid section > p:first-child {
-    color: var(--metadata-primary);
-    font-family: var(--font-data);
-    font-size: var(--caption);
-    letter-spacing: 0.1em;
-  }
-
-  .format-grid h3 {
-    font-size: var(--step-2);
-    font-weight: var(--weight-medium);
-  }
-
-  .format-grid section > p:last-child {
-    color: var(--text-secondary);
-    line-height: 1.75;
-  }
-
-  .format-note {
-    padding-left: var(--space-3);
-    border-left: 2px solid var(--color-copper-text);
-  }
-
   @media (max-width: 700px) {
-    .about-header,
-    .about-section {
+    .about-header {
       grid-template-columns: 1fr;
       gap: var(--space-3);
     }
@@ -259,22 +83,5 @@ import Base from '../../layouts/Base.astro';
       font-size: var(--step-3);
     }
 
-    .about-section {
-      padding: var(--space-5) 0;
-    }
-
-    .scope-list > div,
-    .format-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .scope-list > div {
-      gap: 0;
-    }
-
-    .format-grid section + section {
-      border-top: 1px solid var(--border-subtle);
-      border-left: 0;
-    }
   }
 </style>

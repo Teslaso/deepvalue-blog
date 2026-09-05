@@ -56,7 +56,7 @@ export const ENGLISH_TRANSLATIONS = {
   'publication.projectsIndex': 'PROJECT INDEX',
   'publication.projectsEmpty': 'No projects have been published yet.',
   'publication.blogTitle': 'Research Articles',
-  'publication.blogDescription': 'Reusable research conclusions organized by domain, topic, and time, with core assumptions, evidence boundaries, and conditions for future falsification kept in view.',
+  'publication.blogDescription': 'All published articles, arranged by time.',
   'publication.blogEmpty': 'No published research articles at the moment.',
   'publication.logTitle': 'Research Log',
   'publication.logDescription': 'A time-based record of observations, evidence updates, and changing judgments across fields. A log may be short or long; what matters is that it preserves a research state, not a word count.',

@@ -2,61 +2,41 @@
 import Base from '../../layouts/Base.astro';
 import EntryList from '../../components/EntryList.astro';
 import { getPublishedEntries } from '../../lib/entries.mjs';
+import { sortEntriesByPublishedNewestFirst } from '../../lib/entry-utils.mjs';
 
-const sortedPosts = await getPublishedEntries({ format: 'article' });
-
-const domainLabels = {
-  investment: '投资研究',
-  ai: 'AI 与技术',
-  beyond: '边界之外',
-};
-
-const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
+const sortedPosts = sortEntriesByPublishedNewestFirst(
+  await getPublishedEntries({ format: 'article' }),
+);
 ---
 
-<Base title="研究文章 - Deep Value" description="Deep Value 已发布文章索引">
+<Base title="博客 - Deep Value" description="Deep Value 的全部已发布文章列表">
   <header class="article-index-header">
     <div class="article-index-kicker">
-      <p>RESEARCH ARTICLES</p>
-      <span>DURABLE CONCLUSIONS</span>
+      <p>DEEP VALUE</p>
+      <span>ALL ARTICLES</span>
     </div>
     <div class="article-index-copy">
-      <h1 data-i18n="publication.blogTitle">研究文章</h1>
-      <p data-i18n="publication.blogDescription">按领域、专题和时间沉淀可复用的研究结论，尽量保留核心假设、证据边界和后续证伪条件。</p>
+      <h1 data-i18n="publication.blogTitle">博客</h1>
+      <p data-i18n="publication.blogDescription">所有文章按时间排列，慢慢阅读。</p>
     </div>
   </header>
 
-  <div class="article-index-layout" data-entry-filter-scope>
-    <aside class="domain-filter" data-i18n-aria-label="filters.byDomain" aria-label="按领域筛选文章">
-      <p data-i18n="filters.domain">DOMAIN FILTER</p>
+  <section class="article-index-list" aria-labelledby="article-list-title">
+    <header>
       <div>
-        <button type="button" class="is-active" data-domain-filter="all" aria-pressed="true">
-          <span>00</span><span data-i18n="filters.all">全部</span>
-        </button>
-        {allDomains.map((domain, index) => (
-          <button type="button" data-domain-filter={domain} aria-pressed="false">
-            <span>{String(index + 1).padStart(2, '0')}</span><span data-i18n={`domain.${domain}`}>{domainLabels[domain]}</span>
-          </button>
-        ))}
+        <p data-i18n="index.entryIndex">ARTICLE INDEX</p>
+        <h2 id="article-list-title" data-i18n="index.articleList">全部文章</h2>
       </div>
-    </aside>
+      <span>{String(sortedPosts.length).padStart(2, '0')} PUBLISHED</span>
+    </header>
 
-    <section class="article-index-list" aria-labelledby="article-list-title">
-      <header>
-        <div>
-          <p data-i18n="index.entryIndex">ARTICLE INDEX</p>
-          <h2 id="article-list-title" data-i18n="index.articleList">全部文章</h2>
-        </div>
-        <span>{String(sortedPosts.length).padStart(2, '0')} PUBLISHED</span>
-      </header>
-
-      <EntryList
-        entries={sortedPosts}
-        emptyText="暂时没有已发布的研究文章。"
-        emptyTextKey="publication.blogEmpty"
-      />
-    </section>
-  </div>
+    <EntryList
+      entries={sortedPosts}
+      emptyText="暂时没有已发布的文章。"
+      emptyTextKey="publication.blogEmpty"
+      dateMode="published"
+    />
+  </section>
 </Base>
 
 <style>
@@ -108,66 +88,9 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
     line-height: 1.75;
   }
 
-  .article-index-layout {
-    display: grid;
-    grid-template-columns: minmax(9rem, 0.25fr) minmax(0, 1fr);
-    gap: clamp(2rem, 6vw, 6.5rem);
-    padding-top: var(--space-6);
-  }
-
-  .domain-filter {
-    position: sticky;
-    top: calc(var(--header-height) + 2rem);
-    align-self: start;
-  }
-
-  .domain-filter > p {
-    margin: 0 0 var(--space-3);
-    color: var(--metadata-primary);
-    font-family: var(--font-data);
-    font-size: var(--caption);
-    letter-spacing: 0.1em;
-  }
-
-  .domain-filter > div {
-    display: grid;
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  .domain-filter button {
-    display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: var(--space-2);
-    align-items: center;
-    min-height: 44px;
-    padding: 0.65rem 0;
-    color: var(--metadata-primary);
-    border: 0;
-    border-bottom: 1px solid var(--border-subtle);
-    border-radius: 0;
-    background: transparent;
-    cursor: pointer;
-    font-family: var(--font-data);
-    font-size: var(--caption);
-    text-align: left;
-  }
-
-  .domain-filter button span {
-    color: var(--link-primary);
-  }
-
-  .domain-filter button:hover,
-  .domain-filter button.is-active {
-    color: var(--text-primary);
-  }
-
-  .domain-filter button.is-active {
-    box-shadow: inset 3px 0 0 var(--color-copper-text);
-    padding-left: var(--space-2);
-  }
-
   .article-index-list {
-    min-width: 0;
+    width: min(100%, 58rem);
+    margin: var(--space-6) auto 0;
   }
 
   .article-index-list > header {
@@ -201,13 +124,9 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
   }
 
   @media (max-width: 760px) {
-    .article-index-header,
-    .article-index-layout {
+    .article-index-header {
       grid-template-columns: 1fr;
       gap: var(--space-3);
-    }
-
-    .article-index-header {
       padding-top: var(--space-4);
     }
 
@@ -221,35 +140,8 @@ const allDomains = [...new Set(sortedPosts.map(post => post.data.domain))];
       font-size: var(--step-3);
     }
 
-    .article-index-layout {
-      padding-top: var(--space-5);
-    }
-
-    .domain-filter {
-      position: static;
-    }
-
-    .domain-filter > div {
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    .domain-filter button {
-      display: inline-flex;
-      width: auto;
-      padding: 0.65rem 0.85rem;
-      border-right: 1px solid var(--border-subtle);
-      text-align: center;
-    }
-
-    .domain-filter button.is-active {
-      color: var(--text-inverse);
-      background: var(--color-ink);
-      box-shadow: none;
-    }
-
-    .domain-filter button.is-active span {
-      color: var(--color-copper-on-ink);
+    .article-index-list {
+      margin-top: var(--space-5);
     }
   }
 </style>

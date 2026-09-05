@@ -11,17 +11,25 @@ const allArticles = sortEntriesByPublishedNewestFirst(
 
 <Base
   title="Deep Value"
-  description="记录我正在观察、理解和实践的事情。"
+  description="投资、交易、大宗商品与量化交易相关的文章记录。"
 >
   <div class="homepage-index">
-    <section class="all-articles-section" aria-labelledby="all-articles-heading">
-      <div class="section-label">
-        <div>
-          <p data-i18n="index.entryIndex">ARTICLE INDEX</p>
-          <h1 id="all-articles-heading" data-i18n="index.articleList">全部文章</h1>
-        </div>
-        <span>{String(allArticles.length).padStart(2, '0')} <span data-i18n="index.published">PUBLISHED</span></span>
+    <header class="home-masthead">
+      <div>
+        <p class="home-kicker">DEEP VALUE / ARTICLES</p>
+        <h1>全部文章</h1>
       </div>
+      <p class="home-description">按时间排列，持续记录投资、交易、大宗商品与量化交易。</p>
+    </header>
+
+    <section class="articles-module" aria-labelledby="articles-heading">
+      <header class="module-header">
+        <div>
+          <p>ARTICLE INDEX</p>
+          <h2 id="articles-heading">文章</h2>
+        </div>
+        <span>{String(allArticles.length).padStart(2, '0')} PIECES</span>
+      </header>
       <EntryList
         entries={allArticles}
         emptyText="暂时没有已发布的文章。"
@@ -38,55 +46,110 @@ const allArticles = sortEntriesByPublishedNewestFirst(
     margin-top: var(--header-height);
     color: var(--text-primary);
     background: var(--surface-primary);
+    background-image: radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--color-teal) 11%, transparent) 0, transparent 26rem);
   }
 
-  .all-articles-section {
+  .home-masthead,
+  .articles-module {
     width: min(1180px, calc(100% - 3rem));
     margin: 0 auto;
-    padding: var(--space-6) 0 var(--space-7);
   }
 
-  .section-label {
+  .home-masthead {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.45fr);
+    gap: clamp(2rem, 8vw, 9rem);
     align-items: end;
-    gap: var(--space-4);
-    padding-bottom: var(--space-3);
+    padding: clamp(3rem, 7vw, 5.5rem) 0 var(--space-5);
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  .section-label p,
-  .section-label h1,
-  .section-label > span {
+  .home-kicker,
+  .home-masthead h1,
+  .home-description {
     margin: 0;
   }
 
-  .section-label p,
-  .section-label > span {
+  .home-kicker {
+    margin-bottom: var(--space-4);
+    color: var(--link-primary);
+    font-family: var(--font-data);
+    font-size: var(--caption);
+    letter-spacing: 0.11em;
+  }
+
+  .home-masthead h1 {
+    font-size: clamp(2.8rem, 6vw, 5.8rem);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.055em;
+    line-height: 1;
+  }
+
+  .home-description {
+    max-width: 20rem;
+    color: var(--text-secondary);
+    font-size: var(--step-1);
+    line-height: 1.8;
+  }
+
+  .module-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-5) 0 var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .module-header p,
+  .module-header h2,
+  .module-header > span {
+    margin: 0;
+  }
+
+  .module-header p,
+  .module-header > span {
     color: var(--metadata-primary);
     font-family: var(--font-data);
     font-size: var(--caption);
     letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
-  .section-label h1 {
-    margin-top: 0.45rem;
+  .module-header h2 {
+    margin-top: 0.35rem;
     font-size: var(--step-3);
     font-weight: var(--weight-medium);
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    line-height: 1.1;
+  }
+
+  @media (max-width: 860px) {
+    .home-masthead,
+    .articles-module {
+      width: min(100% - 2rem, 1180px);
+    }
+
+    .home-masthead {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      min-height: 0;
+    }
+
   }
 
   @media (max-width: 560px) {
-    .all-articles-section {
-      width: min(100% - 2rem, 1180px);
-      padding-top: var(--space-5);
+    .home-masthead {
+      padding-top: var(--space-6);
     }
 
-    .section-label {
-      grid-template-columns: 1fr;
-      gap: var(--space-1);
+    .home-masthead h1 {
+      font-size: clamp(3rem, 16vw, 5.2rem);
     }
+
+    .module-header {
+      align-items: start;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
   }
 </style>
